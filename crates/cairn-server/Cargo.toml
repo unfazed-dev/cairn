@@ -13,6 +13,12 @@ homepage.workspace = true
 name = "cairn-server"
 path = "src/main.rs"
 
+[features]
+default = []
+# Forward to cairn-infra's pg feature, enabling the real PgReplicator. Build with
+# `cargo build -p cairn-server --features pg` (or `--all-features`).
+pg = ["cairn-infra/pg"]
+
 [dependencies]
 cairn-domain = { workspace = true }
 cairn-application = { workspace = true }
