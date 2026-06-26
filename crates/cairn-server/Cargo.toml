@@ -1,0 +1,40 @@
+[package]
+name = "cairn-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Cairn sync server binary (composition root)."
+repository.workspace = true
+homepage.workspace = true
+
+[[bin]]
+name = "cairn-server"
+path = "src/main.rs"
+
+[dependencies]
+cairn-domain = { workspace = true }
+cairn-application = { workspace = true }
+cairn-infra = { workspace = true }
+
+tokio = { workspace = true }
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+metrics = { workspace = true }
+metrics-exporter-prometheus = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+clap = { workspace = true }
+config = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+async-trait = { workspace = true }
+dotenvy = { workspace = true }
+
+[lints]
+workspace = true
