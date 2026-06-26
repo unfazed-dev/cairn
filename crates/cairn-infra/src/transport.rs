@@ -21,8 +21,12 @@ use tokio::sync::Notify;
 use cairn_application::SessionManager;
 use cairn_domain::{Predicate, SyncSession};
 
-use crate::router::{TokioEventSink, DEFAULT_SESSION_BUFFER};
+use crate::router::TokioEventSink;
 use crate::wire::WireCodec;
+
+/// Default per-session bounded-buffer depth. Slow clients that fall this far
+/// behind are dropped (an explicit, observable choice — never silent OOM).
+const DEFAULT_SESSION_BUFFER: usize = 1024;
 
 /// Shared state injected into the axum router.
 #[derive(Clone)]
