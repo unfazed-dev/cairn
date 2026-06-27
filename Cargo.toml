@@ -21,6 +21,12 @@
 #                         ports and runs an axum HTTP/WS server.
 #   cairn-bench           the benchmark harness — Week-1 deliverable: proves ≥5×
 #                         PowerSync's 2-4k ops/sec throughput ceiling.
+#   cairn-core            the platform-agnostic client sync engine — pure Rust
+#                         (no tokio, no SQLite): the Storage seam + the apply
+#                         state machine. WASM-clean; what the FFI bridges bind.
+#   cairn-client          the native client: SqliteStorage (rusqlite) + the
+#                         tokio SyncClient that connects to /sync, applies frames,
+#                         checkpoints durably, and reconnects with resume_lsn.
 #
 # Rule enforced by structure + clippy: domain must never depend on application,
 # application must never depend on infrastructure. The dependency-inversion arrow
@@ -36,6 +42,8 @@ members = [
     "crates/cairn-server",
     "crates/cairn-bench",
     "crates/cairn-cloud",
+    "crates/cairn-core",
+    "crates/cairn-client",
 ]
 
 [workspace.package]
@@ -117,6 +125,9 @@ cairn-domain = { path = "crates/cairn-domain", version = "0.1.0" }
 cairn-application = { path = "crates/cairn-application", version = "0.1.0" }
 cairn-infra = { path = "crates/cairn-infra", version = "0.1.0" }
 cairn-cloud = { path = "crates/cairn-cloud", version = "0.1.0" }
+cairn-core = { path = "crates/cairn-core", version = "0.1.0" }
+cairn-client = { path = "crates/cairn-client", version = "0.1.0" }
+cairn-server = { path = "crates/cairn-server", version = "0.1.0" }
 
 # -----------------------------------------------------------------------------
 # Workspace-wide lints. Fail CI on the things that matter; warn on the rest.
