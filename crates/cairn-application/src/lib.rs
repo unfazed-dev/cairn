@@ -30,9 +30,12 @@ pub mod ports;
 pub mod session;
 
 pub use fanout::{FanOutOutcome, FanOutService};
-pub use ports::{DeliveryDecision, EventSink, ReplicatorStream, SessionCandidate, SessionStore};
+pub use ports::{
+    DeliveryDecision, EventSink, Metrics, MetricsSnapshot, ReplicatorStream, SessionCandidate,
+    SessionStore, StoreRejection, SyncAuth,
+};
 pub use session::SessionManager;
 
 // Re-export the domain types the application surface needs so downstream crates
 // can depend on `cairn-application` alone for the public API.
-pub use cairn_domain::{Predicate, ReplicationEvent, SessionId, SyncSession};
+pub use cairn_domain::{Lsn, Predicate, Principal, ReplicationEvent, SessionId, SyncSession};
