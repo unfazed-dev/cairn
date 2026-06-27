@@ -333,6 +333,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairn-ffi-wasm"
+version = "0.1.0"
+dependencies = [
+ "cairn-core",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "cairn-infra"
 version = "0.1.0"
 dependencies = [
