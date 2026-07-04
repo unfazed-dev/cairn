@@ -14,9 +14,11 @@ name = "cairn-server"
 path = "src/main.rs"
 
 [features]
-default = []
-# Forward to cairn-infra's pg feature, enabling the real PgReplicator. Build with
-# `cargo build -p cairn-server --features pg` (or `--all-features`).
+# `pg` is on by default so `cargo build -p cairn-server` includes the real
+# PgReplicator. Disable it with `cargo build -p cairn-server --no-default-features`
+# (the runtime default stays `CAIRN_REPLICATOR=fake`, so a featureless binary still
+# runs — it just can't be switched to the real replicator).
+default = ["pg"]
 pg = ["cairn-infra/pg"]
 
 [dependencies]
