@@ -23,6 +23,7 @@
     "vite": "^8.0.0"
   },
   "dependencies": {
+    "cairn-ffi-wasm": "file:../crates/cairn-ffi-wasm/pkg",
     "three": "^0.185.0"
   }
 }
