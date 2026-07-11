@@ -46,3 +46,8 @@ app.*.map.json
 
 # Local Supabase env (operator-provided; env.example.json is committed)
 /env.json
+
+# Cairn "local live" harness state (tool/cairn_live_up.sh) — cairn.toml/.env
+# hold a real (dev-only) HS256 secret + the docker Postgres URL; regenerated
+# by the harness every run, never committed.
+/.cairn/

@@ -240,3 +240,22 @@ fixture-todo-smoke-live:
 		exit 1; \
 	fi
 	cd fixtures/flutter/todo && flutter test integration_test/smoke_auth_test.dart -d macos --dart-define-from-file=env.json
+
+## fixture-todo-cairn-live-up: bring up the Cairn "local live" harness (real
+## cairn-server + real docker Postgres + dev JWTs — stands in for a real
+## Supabase project until W0b is unblocked; see docs/QUICKSTART.md).
+.PHONY: fixture-todo-cairn-live-up
+fixture-todo-cairn-live-up:
+	fixtures/flutter/todo/tool/cairn_live_up.sh
+
+## fixture-todo-cairn-live-down: stop the `cairn dev` process (pass PG=1 to also stop docker Postgres).
+.PHONY: fixture-todo-cairn-live-down
+fixture-todo-cairn-live-down:
+	@if [ "$(PG)" = "1" ]; then fixtures/flutter/todo/tool/cairn_live_down.sh --pg; \
+	else fixtures/flutter/todo/tool/cairn_live_down.sh; fi
+
+## fixture-todo-cairn-live-proof: the W5 acceptance test — two-user offline
+## sync + read/write tenant isolation against the harness above (must already be up).
+.PHONY: fixture-todo-cairn-live-proof
+fixture-todo-cairn-live-proof:
+	cd fixtures/flutter/todo && flutter test integration_test/cairn_live_test.dart -d macos
