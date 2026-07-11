@@ -73,3 +73,51 @@ no transport/store changes.
 
 - Code: `crates/cairn-domain/src/principal.rs`, `crates/cairn-infra/src/auth.rs`,
   `crates/cairn-infra/src/transport.rs` (`sync_handler`).
+
+## Addendum: JWKS / RS256+ES256 support (2026-07-12)
+
+**Context.** Supabase projects created since 2025-10-01 sign user JWTs with an
+asymmetric key by default (RS256; ES256/EdDSA optional), publishing the public
+keys at `<project>/auth/v1/.well-known/jwks.json` (edge-cached ~10 min). The
+HS256-only verifier this ADR originally shipped fails against every such
+project — the launch plan's W2 workstream.
+
+**Decision.**
+
+1. `SupabaseJwtAuth` (`crates/cairn-infra/src/auth.rs`) now routes on the
+   token's header `alg`: `HS256` verifies against the existing legacy shared
+   secret (`verify_supabase_hs256`, **unchanged**); `RS256`/`ES256`/`EdDSA`
+   verify against a fetched-and-cached JWKS (`crates/cairn-infra/src/jwks.rs`,
+   `JwksVerifier`). Both paths mirror `Principal` extraction exactly (`sub` →
+   `account_id` and `tenant_id`) — downstream tenant enforcement (ADR-0011,
+   ADR-0018) is unaffected either way.
+2. **No algorithm confusion.** A key's algorithm is fixed from its JWK's key
+   type at cache time; `jsonwebtoken`'s `Validation` is then pinned to exactly
+   that algorithm. An HS256 token is never checked against JWKS key material
+   (and vice versa) — the header `alg` alone routes to one verifier or the
+   other, and `alg: none` fails immediately at header-parse time (the
+   `Algorithm` enum has no such variant).
+3. **Cache policy.** JWKS entries are cached for a TTL (default 10 min,
+   matching Supabase's edge cache). An unknown `kid` triggers one refetch;
+   that refetch attempt is additionally rate-limited (5s) independent of TTL,
+   so a client presenting many distinct bogus `kid`s can't turn verification
+   into a JWKS-endpoint hammer. A fetch failure fails closed.
+4. **Config** (`crates/cairn-server/src/main.rs`): `CAIRN_SYNC_AUTH=supabase-jwt`
+   now requires at least one of `CAIRN_SUPABASE_JWT_SECRET` (legacy HS256) or
+   `CAIRN_SUPABASE_URL`/`CAIRN_SUPABASE_JWKS_URL` (JWKS). Both may be set —
+   each token's `alg` picks the verifier. See `.env.example`.
+5. **Dependency:** `jsonwebtoken` (MIT, `rust_crypto` backend — RustCrypto
+   family, consistent with the `rsa`/`p256` test-only crates rather than
+   adding a second crypto stack like `aws-lc-rs`) for JWK parsing, key
+   material, and algorithm-pinned validation. `reqwest` (already a workspace
+   dependency via `cairn-cloud`'s Stripe client) for the JWKS fetch.
+
+**Known asymmetry (intentional, not a regression):** the JWKS path validates
+`exp` (via `jsonwebtoken`'s default `Validation`, which requires and checks
+it); the legacy HS256 path still does not (Phase 0 laxity, documented above,
+left untouched so existing behavior/tests are unaffected). Neither path
+checks `aud`/`role` — `Principal` only ever lifts `sub`, so there is nothing
+those claims would currently gate.
+
+**References:** `crates/cairn-infra/src/jwks.rs`,
+`crates/cairn-infra/src/auth.rs`, `docs/plans/flutter-supabase-plug-and-play-launch.md` (W2).

@@ -95,11 +95,30 @@ pub struct Config {
     #[arg(long, env = "CAIRN_SYNC_AUTH", default_value = "none")]
     sync_auth: String,
 
-    /// The HS256 secret used to verify Supabase JWTs at /sync. Required when
-    /// `CAIRN_SYNC_AUTH=supabase-jwt`; ignored otherwise. Matches Supabase's
-    /// `JWT_SECRET` (the project's GoTrue signing key).
+    /// The legacy HS256 shared secret used to verify Supabase JWTs at /sync.
+    /// Ignored unless `CAIRN_SYNC_AUTH=supabase-jwt`. Matches Supabase's
+    /// `JWT_SECRET` (the project's GoTrue signing key) — only present on
+    /// projects created before 2025-10-01 or that haven't migrated off it.
+    /// At least one of this or `CAIRN_SUPABASE_URL`/`CAIRN_SUPABASE_JWKS_URL`
+    /// must be set when `CAIRN_SYNC_AUTH=supabase-jwt` (ADR-0010 addendum).
     #[arg(long, env = "CAIRN_SUPABASE_JWT_SECRET", default_value = "")]
     supabase_jwt_secret: String,
+
+    /// The Supabase project URL (e.g. `https://xyzco.supabase.co`), used to
+    /// derive the JWKS URL (`<url>/auth/v1/.well-known/jwks.json`) for
+    /// RS256/ES256/EdDSA verification — Supabase's default signing mode for
+    /// projects created since 2025-10-01. Ignored unless
+    /// `CAIRN_SYNC_AUTH=supabase-jwt`. Superseded by
+    /// `CAIRN_SUPABASE_JWKS_URL` if both are set.
+    #[arg(long, env = "CAIRN_SUPABASE_URL", default_value = "")]
+    supabase_url: String,
+
+    /// Explicit JWKS URL, overriding the one derived from
+    /// `CAIRN_SUPABASE_URL`. Use this for a non-standard gateway/proxy in
+    /// front of Supabase's auth endpoint. Ignored unless
+    /// `CAIRN_SYNC_AUTH=supabase-jwt`.
+    #[arg(long, env = "CAIRN_SUPABASE_JWKS_URL", default_value = "")]
+    supabase_jwks_url: String,
 
     /// The tenant column server-enforced on every predicate (e.g. "org_id").
     /// When set with `CAIRN_SYNC_AUTH=supabase-jwt`, the server ANDs
@@ -161,15 +180,38 @@ async fn main() -> anyhow::Result<()> {
     // cannot enforce tenant scoping and refuses to inject predicates.
     let auth: Arc<dyn cairn_application::ports::SyncAuth> = match cfg.sync_auth.as_str() {
         "supabase-jwt" => {
-            if cfg.supabase_jwt_secret.is_empty() {
+            // Config resolution (ADR-0010 addendum): at least one of the
+            // legacy HS256 secret or a JWKS source must be set. Explicit
+            // CAIRN_SUPABASE_JWKS_URL wins over one derived from
+            // CAIRN_SUPABASE_URL. Both a secret and a JWKS source may be set
+            // at once — each token's header `alg` then picks the verifier
+            // (HS256 -> secret, RS256/ES256/EdDSA -> JWKS); neither is ever
+            // checked against the other's key material.
+            let secret = (!cfg.supabase_jwt_secret.is_empty())
+                .then(|| cfg.supabase_jwt_secret.as_bytes().to_vec());
+            let jwks_url = if !cfg.supabase_jwks_url.is_empty() {
+                Some(cfg.supabase_jwks_url.clone())
+            } else if !cfg.supabase_url.is_empty() {
+                Some(format!(
+                    "{}/auth/v1/.well-known/jwks.json",
+                    cfg.supabase_url.trim_end_matches('/')
+                ))
+            } else {
+                None
+            };
+            if secret.is_none() && jwks_url.is_none() {
                 anyhow::bail!(
-                    "CAIRN_SYNC_AUTH=supabase-jwt requires CAIRN_SUPABASE_JWT_SECRET to be set"
+                    "CAIRN_SYNC_AUTH=supabase-jwt requires at least one of \
+                     CAIRN_SUPABASE_JWT_SECRET (legacy HS256) or \
+                     CAIRN_SUPABASE_URL/CAIRN_SUPABASE_JWKS_URL (RS256/ES256/EdDSA)"
                 );
             }
-            info!("sync auth: supabase-jwt (HS256, tenant-enforced)");
-            Arc::new(cairn_infra::SupabaseJwtAuth::new(
-                cfg.supabase_jwt_secret.as_bytes().to_vec(),
-            ))
+            info!(
+                hs256 = secret.is_some(),
+                jwks = jwks_url.is_some(),
+                "sync auth: supabase-jwt (tenant-enforced)"
+            );
+            Arc::new(cairn_infra::SupabaseJwtAuth::from_config(secret, jwks_url))
         }
         "none" => {
             warn!(
