@@ -9,6 +9,12 @@ description = "Cairn native client — SqliteStorage backend + the tokio SyncCli
 repository.workspace = true
 homepage.workspace = true
 
+[features]
+# Pulls in cairn-infra's real Postgres logical-replication adapter for the
+# `e2e_pg_sync` test only. OFF by default — mirrors cairn-infra's own `pg`
+# feature (see that crate's Cargo.toml doc).
+pg = ["cairn-infra/pg"]
+
 [dependencies]
 cairn-core = { workspace = true }
 cairn-domain = { workspace = true }
@@ -29,6 +35,11 @@ cairn-infra = { workspace = true }
 async-trait = { workspace = true }
 axum = { workspace = true }
 bytes = { workspace = true }
+# pg-only (behind the `pg` feature above) — the e2e_pg_sync harness needs a
+# control-plane SQL client (slot cleanup, direct-row assertions) and typed
+# uuid binding, matching cairn-infra's own e2e_pg_* tests.
+tokio-postgres = { workspace = true }
+uuid = { workspace = true }
 
 [lints]
 workspace = true

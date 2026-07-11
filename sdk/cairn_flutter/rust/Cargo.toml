@@ -1,0 +1,34 @@
+[package]
+name = "cairn_flutter_rust"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+# Standalone workspace: detaches this crate from the root cairn Cargo.toml
+# workspace (it is NOT a member there — sdk/cairn_flutter is a separate,
+# independently-versioned Flutter package with its own Rust glue). Without
+# this empty table, cargo would walk up looking for an enclosing workspace
+# and, if it ever found one that claimed this path, silently pull the crate
+# under different resolver/lint settings.
+[workspace]
+
+[dependencies]
+flutter_rust_bridge = "=2.13.0-beta.5"
+
+# The client apply engine + sync loop this SDK wraps. Path deps (relative to
+# this crate, which lives at sdk/cairn_flutter/rust/) — not workspace deps,
+# since this crate has its own empty [workspace] above. cairn-core is not in
+# the task's original crate list but is required transitively: PendingWrite /
+# WriteOp / Outbox / InMemoryStorage live there, and cairn-client re-exports
+# neither.
+cairn-client = { path = "../../../crates/cairn-client" }
+cairn-core = { path = "../../../crates/cairn-core" }
+cairn-domain = { path = "../../../crates/cairn-domain" }
+
+tokio = { version = "1.39", features = ["rt-multi-thread", "sync", "time", "macros"] }
+serde_json = "1.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
