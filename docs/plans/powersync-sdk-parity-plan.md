@@ -174,7 +174,7 @@ Rust `cairn-client`):
 | Swift (iOS/macOS) | ✅ GA `powersync-swift` | 🟢 `sdk/cairn_swift` (UniFFI) — **sim-E2E proven**: `connect`+`query` ran on the **iPhone 17 sim** (iOS 26.5, captured stdout, independently reproduced); Rust compiles host + iOS + sim; `forbid(unsafe)`. SPM `.binaryTarget`/xcframework packaging is the remaining polish |
 | Capacitor | 🟡 Beta | 🟢 `sdk/cairn_capacitor` — web-only v8 plugin over `@cairn/web`'s browser live path (webview WASM+WS unmodified); Playwright PUSH+ECHO E2E |
 | Tauri | 🔴 Alpha | 🟡 `sdk/cairn_tauri` plugin (tauri 2) — compiles + 2 integration tests green (offline connect/query round-trip; write-before-connect contract); `forbid(unsafe)`; `subscribe` run-loop + JS bindings deferred |
-| .NET | 🟡 Beta | 🟢 `sdk/cairn_dotnet` — UniFFI-CS Nord `v0.9.2+v0.28.3` over the cairn-client UniFFI surface (reuses cairn_swift/kotlin's `#[derive(uniffi::Object)]`); iOS/iOS-sim/Android cross-compile verified; generated `cairn.cs` committed; C# runtime E2E SKIP (no dotnet on host) |
+| .NET | 🟡 Beta | 🟢 `sdk/cairn_dotnet` — UniFFI-CS Nord `v0.9.2+v0.28.3` over the cairn-client UniFFI surface (reuses cairn_swift/kotlin's `#[derive(uniffi::Object)]`); iOS/iOS-sim/Android cross-compile verified; generated `cairn.cs` committed; C# runtime E2E **live** (`dotnet/smoke` PUSH+ECHO vs the spine, 2026-07-13) |
 | Rust | 🔴 Alpha | ✅ `crates/cairn-client` — native Rust SDK (`SyncClient`/`SqliteStorage`, `forbid(unsafe)`, live-Supabase-tested, README). Not yet on crates.io |
 
 Catch-up is **cheap, not foundational**: `cairn-core` is WASM-clean
@@ -247,7 +247,7 @@ reachable end-to-end.
    thesis** (the Flutter `Runtime::new()` + `SyncClient` FFI pattern ported
    straight to napi). Honest scope: offline-only (no live `subscribe`/replicator
    path verified yet) + a `u64→f64` id-precision `ponytail:`. Cairn is now
-   **10/10 platforms** (Flutter + JS-Web + Node + Rust + Tauri + Swift + Kotlin + Capacitor + .NET + React Native; RN/Capacitor/.NET landed 2026-07-12 — see `docs/plans/sdk-parity-final-three.md` + ADR-0020). Note: `cairn-ffi-wasm` + `sdk/cairn_web` are ONE platform (JavaScript Web, matching PowerSync's single `@powersync/web`); the authoritative figure vs PowerSync's 10 is now **10/10** (9/10 live-E2E-verified; .NET SKIP — no dotnet on host; RN-iOS TurboModule pending).
+   **10/10 platforms** (Flutter + JS-Web + Node + Rust + Tauri + Swift + Kotlin + Capacitor + .NET + React Native; RN/Capacitor/.NET landed 2026-07-12 — see `docs/plans/sdk-parity-final-three.md` + ADR-0020). Note: `cairn-ffi-wasm` + `sdk/cairn_web` are ONE platform (JavaScript Web, matching PowerSync's single `@powersync/web`); the authoritative figure vs PowerSync's 10 is now **10/10** (10/10 with a live-E2E path — .NET C# smoke live via `dotnet/smoke` 2026-07-13; RN-iOS TurboModule pending, RN-Android emu-verified).
 4. P5 Sync Streams — biggest remaining *feature* gap for the "equivalent SDK"
    claim.
 5. ✅ **DONE** — `cairn-client` documented as the Rust SDK (README + public-API
@@ -311,7 +311,7 @@ this-session verifiability noted:
 | React Native | reuse the JS core (RN shares it, like `@powersync/web`↔RN) | partial (Jest; full E2E needs device) | medium |
 | 🟢 Kotlin/KMP | `sdk/cairn_kotlin` (UniFFI) over `cairn-client` | **yes (`connectedDebugAndroidTest` PASS on API-34 emu — construct+connect+query round-trip)** | device-verified (7/10) |
 | ✅ Swift/iOS | `sdk/cairn_swift` (UniFFI) over `cairn-client` | yes (`cargo test` 2/2 + `swiftc -typecheck`) | scaffold shipped (7/10) |
-| .NET | uniffi-cs / cbindgen + DllImport | needs .NET SDK (not probed) | medium-large |
+| .NET | uniffi-cs / cbindgen + DllImport | ✅ live (`dotnet/smoke` PUSH+ECHO E2E 2026-07-13) | done |
 | Capacitor | JS facade over the web JS core | partial | small-medium |
 
 Remaining *feature* gaps (independent of platforms): P5 Sync Streams;
