@@ -169,7 +169,7 @@ Rust `cairn-client`):
 | Capacitor | 🟡 Beta | ❌ |
 | Tauri | 🔴 Alpha | ❌ |
 | .NET | 🟡 Beta | ❌ |
-| Rust | 🔴 Alpha | ✅ `crates/cairn-client` (native API, not packaged as an SDK) |
+| Rust | 🔴 Alpha | ✅ `crates/cairn-client` — native Rust SDK (`SyncClient`/`SqliteStorage`, `forbid(unsafe)`, live-Supabase-tested, README). Not yet on crates.io |
 
 Catch-up is **cheap, not foundational**: `cairn-core` is WASM-clean
 (`forbid(unsafe_code)`, deps = `cairn-domain`+serde only) with trait seams
@@ -241,11 +241,12 @@ reachable end-to-end.
    thesis** (the Flutter `Runtime::new()` + `SyncClient` FFI pattern ported
    straight to napi). Honest scope: offline-only (no live `subscribe`/replicator
    path verified yet) + a `u64→f64` id-precision `ponytail:`. Cairn is now
-   **3/10 platforms** (Flutter + WASM + Node).
+   **4/10 platforms** (Flutter + WASM + Node + Rust — `cairn-client` is the
+   Rust SDK, README + shipped; not yet on crates.io).
 4. P5 Sync Streams — biggest remaining *feature* gap for the "equivalent SDK"
    claim.
-5. Package `cairn-client` as the Rust SDK (platform #10, trivial — re-export +
-   docs) for a fast 4/10.
+5. ✅ **DONE** — `cairn-client` documented as the Rust SDK (README + public-API
+   surface); 4/10. crates.io publish is a release-op, not a code gap.
 
 ### Path to 10/10 (honest roadmap)
 
@@ -258,7 +259,7 @@ this-session verifiability noted:
 | ✅ Flutter | frb | yes (`flutter test`) | shipped |
 | ✅ WASM/Web | wasm-bindgen | yes (`smoke.mjs`) | shipped |
 | ✅ Node | napi-rs | **yes (`node smoke` EXIT=0)** | scaffold shipped |
-| Rust SDK | re-export `cairn-client` + docs | yes (`cargo test`) | **trivial — fast 4/10** |
+| ✅ Rust SDK | `cairn-client` + README (native, `forbid(unsafe)`, live-tested) | yes (`cargo test`) | shipped (4/10) |
 | Tauri | tauri-plugin over `cairn-client` (Rust-native — most natural next) | yes (`cargo build`) | small-medium |
 | Web JS SDK | package `cairn-ffi-wasm` as `@cairn/web` w/ PS-style API | yes (vitest) | small-medium |
 | React Native | reuse the JS core (RN shares it, like `@powersync/web`↔RN) | partial (Jest; full E2E needs device) | medium |
