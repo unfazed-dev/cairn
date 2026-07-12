@@ -241,7 +241,7 @@ reachable end-to-end.
    thesis** (the Flutter `Runtime::new()` + `SyncClient` FFI pattern ported
    straight to napi). Honest scope: offline-only (no live `subscribe`/replicator
    path verified yet) + a `u64→f64` id-precision `ponytail:`. Cairn is now
-   **8/10 platforms** (Flutter + WASM + Node + Rust + Web-JS + Tauri + Swift + Kotlin — see items 5–9).
+   **7/10 platforms** (Flutter + JS-Web + Node + Rust + Tauri + Swift + Kotlin; RN/Capacitor/.NET remain — see items 5–9). Note: `cairn-ffi-wasm` + `sdk/cairn_web` are ONE platform (JavaScript Web, matching PowerSync's single `@powersync/web`); earlier incremental commit-msg counts double-counted them — the authoritative figure vs PowerSync's 10 is **7/10**.
 4. P5 Sync Streams — biggest remaining *feature* gap for the "equivalent SDK"
    claim.
 5. ✅ **DONE** — `cairn-client` documented as the Rust SDK (README + public-API
