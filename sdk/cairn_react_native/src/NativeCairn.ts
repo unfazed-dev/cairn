@@ -17,11 +17,18 @@
 // validated (pure-TS facade over a native JSI backend).
 //
 // METHOD-BY-METHOD MAPPING (spec → UniFFI in sdk/cairn_swift + sdk/cairn_kotlin)
-//   connect()                 → CairnClient::connect() -> Result<(), CairnError>
+//   connect(url, token, dbPath) → CairnClient::new(url, token, db_path) + CairnClient::connect() -> Result<(), CairnError>
 //   subscribe(table)          → CairnClient::subscribe(table: String) -> Result<(), CairnError>
 //   write(table, op, pk, pj)  → CairnClient::write(table, op, pk, payload_json: Option<String>) -> Result<u64, CairnError>
 //   query(sql)                → CairnClient::query(sql: String) -> Result<String, CairnError>  (JSON rows)
 //   checkpoint()              → CairnClient::checkpoint() -> Result<u64, CairnError>
+//
+// Wave-B note: TurboModules are singletons instantiated by RN with a no-arg
+// constructor — there is no JS-visible constructor surface to pass (url, token,
+// dbPath) through. The spec therefore grows `connect(url, token, dbPath)` so
+// the Kotlin module can lazily construct `uniffi.cairn_kotlin.CairnClient` on
+// first `connect(...)`. The TS facade (`CairnClient.ts`) captures these in its
+// config and passes them through on `connect()`.
 //
 // The native side blocks on its OWN tokio runtime (UniFFI sync methods — see
 // the `ponytail:` in sdk/cairn_swift/src/lib.rs for why block-on-owned-runtime
@@ -52,8 +59,17 @@ export const codegenConfig = {
  * annotation.
  */
 export interface Spec extends TurboModule {
-  /** Open the local SQLite store + build the SyncClient. No network I/O. */
-  connect(): Promise<void>;
+  /**
+   * Construct the backing UniFFI `CairnClient(url, token, dbPath)` (idempotent
+   * — re-connect reuses the existing handle) and open the local SQLite store +
+   * build the SyncClient. No network I/O until `subscribe(table)`.
+   *
+   * `url` is the sync spine's WebSocket URL (e.g. `ws://host:port/sync`);
+   * `token` is the optional auth bearer (null for anonymous); `dbPath` is the
+   * SQLite file path (`:memory:` for ephemeral). These three match the UniFFI
+   * `CairnClient::new` constructor args 1:1.
+   */
+  connect(url: string, token: string | null, dbPath: string): Promise<void>;
   /**
    * Start the live replication loop for `table` on the native side (spawns
    * `client.run_with_reconnect()` on the owned tokio runtime). The app polls
