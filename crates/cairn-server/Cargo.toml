@@ -25,6 +25,7 @@ pg = ["cairn-infra/pg"]
 cairn-domain = { workspace = true }
 cairn-application = { workspace = true }
 cairn-infra = { workspace = true }
+cairn-license = { workspace = true }
 
 tokio = { workspace = true }
 axum = { workspace = true }

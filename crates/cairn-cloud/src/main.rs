@@ -20,9 +20,9 @@ use anyhow::Context;
 use axum::response::Html;
 use axum::routing::get;
 use axum::Router;
-use cairn_cloud::license::Tier;
 use cairn_cloud::routes::{checkout_ok, router, CloudState};
 use cairn_cloud::store::CloudStore;
+use cairn_license::Tier;
 use clap::Parser;
 use tracing::info;
 

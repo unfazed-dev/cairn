@@ -21,6 +21,7 @@ ui = []
 
 [dependencies]
 cairn-domain = { workspace = true }
+cairn-license = { workspace = true }
 
 tokio = { workspace = true }
 axum = { workspace = true }

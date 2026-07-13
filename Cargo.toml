@@ -45,6 +45,7 @@ members = [
     "crates/cairn-server",
     "crates/cairn-bench",
     "crates/cairn-cloud",
+    "crates/cairn-license",
     "crates/cairn-core",
     "crates/cairn-client",
     "crates/cairn-ffi-wasm",
@@ -159,6 +160,7 @@ cairn-domain = { path = "crates/cairn-domain", version = "0.1.0" }
 cairn-application = { path = "crates/cairn-application", version = "0.1.0" }
 cairn-infra = { path = "crates/cairn-infra", version = "0.1.0" }
 cairn-cloud = { path = "crates/cairn-cloud", version = "0.1.0" }
+cairn-license = { path = "crates/cairn-license", version = "0.1.0" }
 cairn-core = { path = "crates/cairn-core", version = "0.1.0" }
 cairn-client = { path = "crates/cairn-client", version = "0.1.0" }
 cairn-server = { path = "crates/cairn-server", version = "0.1.0" }

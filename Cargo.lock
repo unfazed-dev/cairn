@@ -330,6 +330,7 @@ dependencies = [
  "axum",
  "bytes",
  "cairn-domain",
+ "cairn-license",
  "clap",
  "hex",
  "hmac 0.12.1",
@@ -420,6 +421,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairn-license"
+version = "0.1.0"
+dependencies = [
+ "cairn-domain",
+ "hex",
+ "hmac 0.12.1",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror 1.0.69",
+ "time",
+]
+
+[[package]]
 name = "cairn-server"
 version = "0.1.0"
 dependencies = [
@@ -428,6 +443,7 @@ dependencies = [
  "cairn-application",
  "cairn-domain",
  "cairn-infra",
+ "cairn-license",
  "clap",
  "serde_json",
  "tokio",
