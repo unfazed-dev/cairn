@@ -407,6 +407,22 @@ async fn main() -> anyhow::Result<()> {
     state_builder = state_builder
         .with_write_back(Arc::clone(&write_back))
         .with_write_tables(write_tables);
+
+    // ---- snapshot-on-subscribe adapter (ADR-0014) ----
+    // Under `CAIRN_REPLICATOR=pg` (feature `pg`) inject a real `PgSnapshotter`
+    // so a freshly-subscribing client receives the table's pre-existing rows
+    // before live fan-out (PowerSync parity — closes the "Flutter app shows 1
+    // of 5 rows" gap). Otherwise `snapshotter` stays `None` (the default set in
+    // `SyncRouterState::new`) and subscribe-time snapshots are skipped.
+    #[cfg(feature = "pg")]
+    if cfg.replicator == "pg" {
+        // pg_url is already known non-empty here — the write-back block above
+        // bailed on an empty CAIRN_PG_URL under the same `replicator == "pg"`.
+        let snapshotter: Arc<dyn cairn_application::ports::SnapshotSource> =
+            Arc::new(cairn_infra::PgSnapshotter::new(&cfg.pg_url));
+        state_builder = state_builder.with_snapshotter(snapshotter);
+        info!("snapshot-on-subscribe: PgSnapshotter (real source)");
+    }
     let state = state_builder;
 
     // CORS: explicit origins in production, permissive for local dev (the
