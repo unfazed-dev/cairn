@@ -9,3 +9,10 @@
 library;
 
 export 'src/cairn.dart' show Cairn, CairnSupabase, CairnConnectionState;
+// Schema only — `Table` and `Column` are intentionally NOT re-exported at
+// the package root because they shadow Flutter's `Table`/`Column` widgets
+// (a hard collision for any app importing both this package and
+// `material.dart`). Reach them via `import 'package:cairn_flutter/src/schema.dart'`
+// when you need to bind them by name.
+export 'src/schema.dart' show Schema;
+export 'src/cairn_database.dart' show CairnDatabase;

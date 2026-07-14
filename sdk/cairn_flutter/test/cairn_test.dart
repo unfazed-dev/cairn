@@ -60,6 +60,12 @@ class FakeCairnEngine implements CairnEngine {
   }
 
   @override
+  void applySchema(List<ClientTableFfi> tables) {
+    // Stub: record nothing for now. Tests that exercise applySchema wiring
+    // can assert on this fake's captured tables once added (WS3 follow-up).
+  }
+
+  @override
   Future<void> close() async {
     closeCallCount++;
   }

@@ -18,6 +18,12 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 import 'rust/api/cairn.dart' as rust;
 
+// Re-exported so the public API in `cairn.dart` (`Cairn.applySchema`) and
+// `schema.dart` (`Schema.toClientTables`) can name [ClientTableFfi] without
+// each importing `rust/api/cairn.dart` directly — keeping this file the sole
+// importer of the generated bindings (see the library doc above).
+export 'rust/api/cairn.dart' show ClientTableFfi;
+
 /// Connection-state transitions, decoupled from the generated
 /// `rust.CairnConnectionState` so consumers never need to import generated
 /// code. See `rust/src/api/cairn.rs`'s `CairnConnectionState` doc for the
@@ -57,6 +63,15 @@ abstract class CairnEngine {
   /// string (same shape as [CairnSubscriptionStreams.rows]); decode with
   /// jsonDecode. Requires an active subscription.
   Future<String> query({required String sql});
+
+  /// Materialize the WS2 read-views for [tables] in the on-device SQLite
+  /// file (`CREATE VIEW IF NOT EXISTS <table> AS SELECT json_extract(...)
+  /// ... FROM cairn_data WHERE table_name='<table>'` — see
+  /// `SqliteStorage::apply_schema`). Idempotent for an unchanged schema;
+  /// the views persist in the SQLite file, so this only needs to run once
+  /// after connect. Synchronous: the FFI is `Result<(), String>` and throws
+  /// on error. Wraps the generated `CairnHandle.applySchema`.
+  void applySchema(List<rust.ClientTableFfi> tables);
 
   /// Tear down the active subscription's background work (the sync loop and
   /// the watch-stream pump). Safe to call with no active subscription and
@@ -118,6 +133,10 @@ class RustCairnEngine implements CairnEngine {
   @override
   Future<String> query({required String sql}) =>
       _handle.query(sql: sql);
+
+  @override
+  void applySchema(List<rust.ClientTableFfi> tables) =>
+      _handle.applySchema(tables: tables);
 
   @override
   Future<void> close() => _handle.close();
