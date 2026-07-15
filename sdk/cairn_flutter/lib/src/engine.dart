@@ -14,12 +14,10 @@
 /// `src/rust/api/cairn.dart`.
 library;
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-
 import 'rust/api/cairn.dart' as rust;
 
 // Re-exported so the public API in `cairn.dart` (`Cairn.applySchema`) and
-// `schema.dart` (`Schema.toClientTables`) can name [ClientTableFfi] without
+// `schema.dart` (`CairnSchema.toClientTables`) can name [ClientTableFfi] without
 // each importing `rust/api/cairn.dart` directly — keeping this file the sole
 // importer of the generated bindings (see the library doc above).
 export 'rust/api/cairn.dart' show ClientTableFfi;
@@ -30,26 +28,33 @@ export 'rust/api/cairn.dart' show ClientTableFfi;
 /// precise (heuristic) semantics of `connected`.
 enum CairnConnectionState { connecting, connected, reconnecting, disconnected }
 
-/// The two streams a subscription produces.
-class CairnSubscriptionStreams {
-  const CairnSubscriptionStreams({required this.rows, required this.state});
+/// One table in a multi-table subscription: a name + an optional safe-SQL
+/// `where_sql` (ADR-0012). A connection subscribes to a list of these over
+/// one `/sync` socket (D1/ADR-0022 multi-table-per-handle). Plain Dart (not
+/// the generated `TableSubFfi`) so tests can build it without the native
+/// library.
+class CairnTableSub {
+  const CairnTableSub({required this.name, this.whereSql});
 
-  /// One JSON-array-of-objects string per tick — the full row set for the
-  /// subscribed table.
-  final Stream<String> rows;
+  /// CairnTable name to subscribe to.
+  final String name;
 
-  /// Connection-state transitions for this subscription's session.
-  final Stream<CairnConnectionState> state;
+  /// Optional safe-SQL predicate scoped to this table (ADR-0012).
+  final String? whereSql;
 }
 
-/// What [Cairn] needs from a backend: start a subscription, perform a
-/// durable write. Implemented for real by [RustCairnEngine]; implement it
-/// yourself in tests to avoid the native library entirely.
+/// What [Cairn] needs from a backend. Implemented for real by [RustCairnEngine];
+/// implement it yourself in tests to avoid the native library entirely.
 abstract class CairnEngine {
-  Future<CairnSubscriptionStreams> subscribe({
-    required String table,
-    String? whereSql,
-  });
+  /// Start a multi-table subscription over one `/sync` socket. Returns the
+  /// connection-state stream (the session's lifecycle). Call [watch] per
+  /// table to receive that table's rows.
+  Stream<CairnConnectionState> subscribe({required List<CairnTableSub> tables});
+
+  /// Attach a row stream for one subscribed table: one JSON-array-of-objects
+  /// string per tick (the durable snapshot immediately, then after every
+  /// applied change). `table` must be among those passed to [subscribe].
+  Stream<String> watch({required String table});
 
   /// Returns the local outbox id.
   Future<int> write({
@@ -60,8 +65,8 @@ abstract class CairnEngine {
   });
 
   /// Run an arbitrary SELECT against on-device SQLite. Returns a JSON-array
-  /// string (same shape as [CairnSubscriptionStreams.rows]); decode with
-  /// jsonDecode. Requires an active subscription.
+  /// string (same shape as [watch]'s ticks); decode with jsonDecode. Requires
+  /// an active subscription.
   Future<String> query({required String sql});
 
   /// Materialize the WS2 read-views for [tables] in the on-device SQLite
@@ -73,9 +78,18 @@ abstract class CairnEngine {
   /// on error. Wraps the generated `CairnHandle.applySchema`.
   void applySchema(List<rust.ClientTableFfi> tables);
 
+  /// Pause syncing: abort only the connect loop; reads, writes (durable outbox),
+  /// and `watch` pumps keep working offline. Pair with [resume]. Idempotent.
+  Future<void> disconnect();
+
+  /// Resume syncing after [disconnect]: respawn the connect loop on the same
+  /// client (outbox flushes on reconnect). Returns the fresh connection-state
+  /// stream; `Cairn` pipes it into its public `connectionState`.
+  Stream<CairnConnectionState> resume();
+
   /// Tear down the active subscription's background work (the sync loop and
-  /// the watch-stream pump). Safe to call with no active subscription and
-  /// safe to call more than once.
+  /// every watch pump). Safe to call with no active subscription and safe to
+  /// call more than once.
   Future<void> close();
 }
 
@@ -96,23 +110,15 @@ class RustCairnEngine implements CairnEngine {
   final rust.CairnHandle _handle;
 
   @override
-  Future<CairnSubscriptionStreams> subscribe({
-    required String table,
-    String? whereSql,
-  }) async {
-    final rowsSink = RustStreamSink<String>();
-    final stateSink = RustStreamSink<rust.CairnConnectionState>();
-    await _handle.subscribe(
-      table: table,
-      whereSql: whereSql,
-      rowsSink: rowsSink,
-      stateSink: stateSink,
-    );
-    return CairnSubscriptionStreams(
-      rows: rowsSink.stream,
-      state: stateSink.stream.map(_mapState),
-    );
+  Stream<CairnConnectionState> subscribe({required List<CairnTableSub> tables}) {
+    final ffiTables = tables
+        .map((t) => rust.TableSubFfi(name: t.name, whereSql: t.whereSql))
+        .toList(growable: false);
+    return _handle.subscribe(tables: ffiTables).map(_mapState);
   }
+
+  @override
+  Stream<String> watch({required String table}) => _handle.watch(table: table);
 
   @override
   Future<int> write({
@@ -140,6 +146,12 @@ class RustCairnEngine implements CairnEngine {
 
   @override
   Future<void> close() => _handle.close();
+
+  @override
+  Future<void> disconnect() => _handle.disconnect();
+
+  @override
+  Stream<CairnConnectionState> resume() => _handle.resume().map(_mapState);
 }
 
 CairnConnectionState _mapState(rust.CairnConnectionState s) => switch (s) {

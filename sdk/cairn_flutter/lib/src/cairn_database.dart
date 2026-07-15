@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:meta/meta.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'cairn.dart';
+import 'cairn_config.dart';
 import 'schema.dart';
 
 /// PowerSync-style entry point: open a [Cairn] sync connection AND resolve
@@ -23,16 +25,23 @@ import 'schema.dart';
 /// ```
 ///
 /// This class adds no sync logic of its own — it wires [Cairn] (the thin
-/// reactive wrapper over the Rust engine) to a resolved [Schema]. A
+/// reactive wrapper over the Rust engine) to a resolved [CairnSchema]. A
 /// Supabase-flavored factory is provided (see [CairnDatabase.supabase]).
 class CairnDatabase {
   CairnDatabase._(this._cairn, this.schema);
+
+  /// Test-only: wrap an injected [Cairn] (itself injectable via
+  /// `Cairn.withEngine`) to exercise the typed mappers ([watchMapped] /
+  /// [getAllMapped]) without the native library. See
+  /// `test/cairn_ws6_test.dart`.
+  @visibleForTesting
+  CairnDatabase.forTest(this._cairn, this.schema);
 
   final Cairn _cairn;
 
   /// The resolved server schema used to materialize the read-views.
   /// Exposed for inspection / codegen; not meant to be mutated.
-  final Schema schema;
+  final CairnSchema schema;
 
   /// Open a [Cairn] connection and resolve the schema.
   ///
@@ -43,7 +52,7 @@ class CairnDatabase {
   ///
   /// If [schema] is `null`, the HTTP base is derived from [url]
   /// (`wss`→`https`, `ws`→`http`, trailing path stripped) and `GET
-  /// {base}/schema` is fetched + parsed via [Schema.fromSchemaDescriptor].
+  /// {base}/schema` is fetched + parsed via [CairnSchema.fromSchemaDescriptor].
   /// Then `Cairn.applySchema` runs once to create the read-views. Returns a
   /// ready [CairnDatabase]; call [subscribe] next to start syncing.
   ///
@@ -52,10 +61,81 @@ class CairnDatabase {
   static Future<CairnDatabase> connect({
     required String url,
     String? token,
-    Schema? schema,
+    CairnSchema? schema,
     required String sqlitePath,
   }) =>
       _open(url: url, token: token, schema: schema, sqlitePath: sqlitePath);
+
+  /// Config-driven open: connect using a [CairnConfig] (normally loaded
+  /// from the app's bundled `assets/cairn.json` via [CairnConfig.load])
+  /// plus the app's declared [schema].
+  ///
+  /// This is the recommended app entry point:
+  ///
+  /// ```dart
+  /// final config = await CairnConfig.load();
+  /// final dir = await getApplicationSupportDirectory();
+  /// final db = await CairnDatabase.open(
+  ///   config: config,
+  ///   schema: appSchema,
+  ///   sqliteDir: dir.path,
+  /// );
+  /// ```
+  ///
+  /// Behavior:
+  /// - SQLite lands at `{sqliteDir}/{config.sqliteFilename}`.
+  /// - If [schema] is `null`, it is fetched from the server
+  ///   (`GET {base}/schema`) as in [connect]. Passing your declared schema
+  ///   is preferred — re-applying it at every connect IS the migration
+  ///   mechanism (views are dropped + recreated; see [CairnSchema]).
+  /// - If the config carries a `supabase` block, Supabase is initialized
+  ///   (skipped when the app already called `Supabase.initialize`) and the
+  ///   signed-in session's access token becomes the sync bearer token —
+  ///   throws [StateError] when nobody is signed in (same contract as
+  ///   [CairnDatabase.supabase]).
+  static Future<CairnDatabase> open({
+    required CairnConfig config,
+    CairnSchema? schema,
+    required String sqliteDir,
+  }) async {
+    final sqlitePath = '$sqliteDir/${config.sqliteFilename}';
+    String? token;
+    if (config.hasSupabase) {
+      final initialized = _supabaseInitialized();
+      if (!initialized) {
+        await Supabase.initialize(
+          url: config.supabaseUrl!,
+          publishableKey: config.supabaseAnonKey!,
+        );
+      }
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session == null) {
+        throw StateError(
+          'cairn config has a "supabase" block but there is no live session '
+          '— sign in before calling CairnDatabase.open()',
+        );
+      }
+      token = session.accessToken;
+    }
+    return _open(
+      url: config.url,
+      token: token,
+      schema: schema,
+      sqlitePath: sqlitePath,
+    );
+  }
+
+  /// `Supabase.initialize` is process-global and once-only; probing
+  /// [Supabase.instance] is the only supported "is it initialized?" check
+  /// (it throws [AssertionError] before initialize).
+  static bool _supabaseInitialized() {
+    try {
+      Supabase.instance;
+      return true;
+    } on AssertionError {
+      return false;
+    }
+  }
 
   /// Open a [Cairn] connection for a Supabase-authenticated app.
   ///
@@ -85,7 +165,7 @@ class CairnDatabase {
   /// `CairnSupabase` for the token-swap primitive).
   static Future<CairnDatabase> supabase({
     required String cairnUrl,
-    Schema? schema,
+    CairnSchema? schema,
     required String sqlitePath,
   }) async {
     final session = Supabase.instance.client.auth.currentSession;
@@ -109,7 +189,7 @@ class CairnDatabase {
   static Future<CairnDatabase> _open({
     required String url,
     String? token,
-    Schema? schema,
+    CairnSchema? schema,
     required String sqlitePath,
   }) async {
     final cairn = await Cairn.connect(
@@ -127,11 +207,18 @@ class CairnDatabase {
       _cairn.connectionState;
 
   /// Subscribe to [table], optionally filtered by [where] (a safe-SQL
-  /// predicate — see `Cairn.subscribe`). One active subscription per
-  /// underlying [Cairn] instance (v1). Must be called before [watch] /
-  /// [getAll] / [write] for that table.
+  /// predicate — see `Cairn.subscribe`). Must be called before [watch] /
+  /// [getAll] / [write] for that table. For multiple tables on one
+  /// connection, use [subscribeTables].
   Future<void> subscribe(String table, {String? where}) =>
       _cairn.subscribe(table, where: where);
+
+  /// Subscribe to [tables] over one `/sync` socket (D1/ADR-0022 multi-table).
+  /// Each entry may carry its own `whereSql`. Replaces any prior subscription.
+  /// Call once with the full table set, then [watch] / [getAll] / [write] per
+  /// table.
+  Future<void> subscribeTables(List<CairnTableSub> tables) =>
+      _cairn.subscribeTables(tables);
 
   /// Reactive SQL watch: re-runs [sql] whenever the synced data changes and
   /// emits the decoded result set. Thin delegate over `Cairn.watchQuery`
@@ -157,6 +244,22 @@ class CairnDatabase {
   /// them into [write]; until then, [execute] is SELECT-only.
   Future<List<Map<String, dynamic>>> execute(String sql) => getAll(sql);
 
+  /// Reactive typed-record watch (WS6): like [watch] but maps each row to a
+  /// typed record via [fromRow]. Thin delegate over `Cairn.watchMapped`.
+  Stream<List<T>> watchMapped<T>(
+    String sql,
+    T Function(Map<String, dynamic> row) fromRow,
+  ) =>
+      _cairn.watchMapped(sql, fromRow);
+
+  /// One-shot typed-record query (WS6): like [getAll] but maps each row to a
+  /// typed record via [fromRow].
+  Future<List<T>> getAllMapped<T>(
+    String sql,
+    T Function(Map<String, dynamic> row) fromRow,
+  ) async =>
+      (await getAll(sql)).map(fromRow).toList(growable: false);
+
   /// Enqueue a durable write into the local outbox. Returns the local outbox
   /// id (NOT a server ack — the applied row round-trips back through [watch];
   /// see `Cairn.write`). [op] is one of `"upsert"`, `"delete"`, `"patch"`.
@@ -176,6 +279,13 @@ class CairnDatabase {
   /// Safe to call with no subscription and safe to call more than once.
   Future<void> close() => _cairn.close();
 
+  /// Pause syncing (delegate to [Cairn.disconnect]); reads/writes/UI keep
+  /// working offline. See `Cairn.disconnect`.
+  Future<void> disconnect() => _cairn.disconnect();
+
+  /// Resume syncing after [disconnect] (delegate to [Cairn.resume]).
+  void resume() => _cairn.resume();
+
   /// Derive the HTTP base for `GET /schema` from the WS `/sync` URL:
   /// `wss`→`https`, `ws`→`http`, host+port preserved, trailing path stripped.
   static String _deriveHttpBase(String wsUrl) {
@@ -189,9 +299,9 @@ class CairnDatabase {
     return '$scheme://${uri.host}$port';
   }
 
-  static Future<Schema> _fetchSchema(String httpBase) async {
+  static Future<CairnSchema> _fetchSchema(String httpBase) async {
     final response = await http.get(Uri.parse('$httpBase/schema'));
     final body = jsonDecode(response.body) as Map<String, dynamic>;
-    return Schema.fromSchemaDescriptor(body);
+    return CairnSchema.fromSchemaDescriptor(body);
   }
 }

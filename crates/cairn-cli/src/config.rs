@@ -174,6 +174,113 @@ impl CairnConfig {
     }
 }
 
+// ============================================================================
+// `.cairn/` — app-side project config (ADR-0023). Distinct from `CairnConfig`
+// (`cairn.toml`) above, which is the operator-side server-run config.
+// ============================================================================
+
+/// `.cairn/` directory name (tool-owned; sits at the app repo root).
+pub const DOT_CAIRN_DIR: &str = ".cairn";
+/// `.cairn/config.json` — committed app-side config (`cairn link` writes it).
+pub const CONFIG_JSON: &str = "config.json";
+/// `.cairn/schema.json` — committed SchemaDescriptor mirror (ADR-0021 shape).
+pub const SCHEMA_JSON: &str = "schema.json";
+/// `.cairn/local/` — gitignored secrets + tool state.
+pub const LOCAL_DIR: &str = "local";
+
+/// The backend an app syncs against (ADR-0023 D4). Supabase is a preset over
+/// the `postgres` adapter, not a fork; `appwrite` is post-v1.
+///
+/// Only PUBLISHABLE credentials belong here (the Supabase anon key is safe to
+/// ship in a client bundle). Service-role keys, JWT secrets, and DB passwords
+/// live in `.env` or `.cairn/local/` (gitignored) — never in this file.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "lowercase")]
+pub enum Backend {
+    /// Plain Postgres — logical replication, bring-your-own / no auth.
+    Postgres,
+    /// Supabase (v1) — Postgres + Supabase JWKS auth + anon-key client.
+    Supabase {
+        /// Project URL, e.g. `https://xyz.supabase.co`.
+        url: String,
+        /// Publishable (anon) key — safe to commit and ship in the client.
+        anon_key: String,
+    },
+    /// Appwrite (post-v1) — realtime/events change source + REST write-back.
+    Appwrite {
+        endpoint: String,
+        project_id: String,
+    },
+}
+
+/// `.cairn/config.json` — the app-side project config `cairn link` writes and
+/// `cairn gen` / `cairn pull` read.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ProjectConfig {
+    /// Human project name (informational).
+    pub project: String,
+    /// The cairn-server `/sync` WebSocket URL (`ws://` or `wss://`).
+    pub sync_url: String,
+    /// Backend preset (ADR-0023 D4). `None` = plain Postgres.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub backend: Option<Backend>,
+}
+
+impl ProjectConfig {
+    /// Load `.cairn/config.json` from `dir`.
+    ///
+    /// # Errors
+    /// [`anyhow::Error`] if the file is missing or malformed.
+    pub fn load(dir: &Path) -> Result<Self> {
+        let path = dir.join(DOT_CAIRN_DIR).join(CONFIG_JSON);
+        let text = std::fs::read_to_string(&path).with_context(|| {
+            format!(
+                "no {}/{} found at {} — run `cairn link` first",
+                DOT_CAIRN_DIR,
+                CONFIG_JSON,
+                path.display()
+            )
+        })?;
+        serde_json::from_str(&text).with_context(|| format!("malformed {}", path.display()))
+    }
+
+    /// Write `.cairn/config.json` into `dir` (pretty JSON; creates `.cairn/`
+    /// if absent). Pure JSON — no banner comment, because strict JSON (what
+    /// [`serde_json::from_str`] parses on [`Self::load`]) forbids `//`.
+    /// The "safe to commit / publishable keys only" note is printed by
+    /// `cairn link` at runtime instead.
+    ///
+    /// # Errors
+    /// [`anyhow::Error`] on serialize or IO failure.
+    pub fn save(&self, dir: &Path) -> Result<()> {
+        let cairn_dir = dir.join(DOT_CAIRN_DIR);
+        std::fs::create_dir_all(&cairn_dir)
+            .with_context(|| format!("creating {}", cairn_dir.display()))?;
+        let path = cairn_dir.join(CONFIG_JSON);
+        let text = serde_json::to_string_pretty(self).context("serializing config.json")?;
+        std::fs::write(&path, format!("{text}\n"))
+            .with_context(|| format!("writing {}", path.display()))
+    }
+
+    /// Derive the HTTP base for `GET /schema` from `sync_url`: `wss`→`https`,
+    /// `ws`→`http`, host+port preserved, path stripped.
+    #[must_use]
+    pub fn http_base(&self) -> String {
+        let translated = if let Some(rest) = self.sync_url.strip_prefix("wss://") {
+            format!("https://{rest}")
+        } else if let Some(rest) = self.sync_url.strip_prefix("ws://") {
+            format!("http://{rest}")
+        } else {
+            self.sync_url.clone()
+        };
+        let authority_start = translated.find("://").map_or(0, |i| i + 3);
+        let path_start = translated[authority_start..]
+            .find('/')
+            .map_or(translated.len(), |i| authority_start + i);
+        translated[..path_start].to_string()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -259,5 +366,57 @@ mod tests {
         assert!(env
             .iter()
             .any(|(k, v)| k == "CAIRN_TENANT_COLUMN" && v == "org_id"));
+    }
+}
+
+#[cfg(test)]
+mod project_config_tests {
+    use super::*;
+
+    fn supabase_cfg() -> ProjectConfig {
+        ProjectConfig {
+            project: "demo".into(),
+            sync_url: "wss://cairn.example.com/sync".into(),
+            backend: Some(Backend::Supabase {
+                url: "https://xyz.supabase.co".into(),
+                anon_key: "ey.publishable".into(),
+            }),
+        }
+    }
+
+    #[test]
+    fn round_trips_through_json() {
+        let cfg = supabase_cfg();
+        let text = serde_json::to_string(&cfg).unwrap();
+        let back: ProjectConfig = serde_json::from_str(&text).unwrap();
+        assert_eq!(cfg, back);
+    }
+
+    #[test]
+    fn postgres_backend_is_unit_tag() {
+        let json = serde_json::to_string(&Backend::Postgres).unwrap();
+        assert_eq!(json, r#"{"kind":"postgres"}"#);
+    }
+
+    #[test]
+    fn http_base_translates_scheme_and_strips_path() {
+        assert_eq!(supabase_cfg().http_base(), "https://cairn.example.com");
+        let pg = ProjectConfig {
+            project: "p".into(),
+            sync_url: "ws://127.0.0.1:8800/sync".into(),
+            backend: None,
+        };
+        assert_eq!(pg.http_base(), "http://127.0.0.1:8800");
+    }
+
+    #[test]
+    fn save_then_load_round_trips_via_disk() {
+        let dir = std::env::temp_dir().join(format!("cairn-dotcairn-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let cfg = supabase_cfg();
+        cfg.save(&dir).unwrap();
+        let loaded = ProjectConfig::load(&dir).unwrap();
+        assert_eq!(cfg, loaded);
+        std::fs::remove_dir_all(&dir).ok();
     }
 }

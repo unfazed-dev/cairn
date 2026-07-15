@@ -14,9 +14,14 @@ class FakeCairnEngine implements CairnEngine {
   final rowsController = StreamController<String>.broadcast();
   final stateController = StreamController<CairnConnectionState>.broadcast();
 
-  String? lastSubscribedTable;
-  String? lastWhereSql;
+  List<CairnTableSub> lastTables = [];
   int subscribeCallCount = 0;
+
+  /// Convenience accessors preserving the single-table test shape.
+  String? get lastSubscribedTable =>
+      lastTables.isEmpty ? null : lastTables.first.name;
+  String? get lastWhereSql =>
+      lastTables.isEmpty ? null : lastTables.first.whereSql;
 
   final List<({String table, String op, String pk, String? payloadJson})>
   writes = [];
@@ -35,18 +40,14 @@ class FakeCairnEngine implements CairnEngine {
   }
 
   @override
-  Future<CairnSubscriptionStreams> subscribe({
-    required String table,
-    String? whereSql,
-  }) async {
+  Stream<CairnConnectionState> subscribe({required List<CairnTableSub> tables}) {
     subscribeCallCount++;
-    lastSubscribedTable = table;
-    lastWhereSql = whereSql;
-    return CairnSubscriptionStreams(
-      rows: rowsController.stream,
-      state: stateController.stream,
-    );
+    lastTables = tables;
+    return stateController.stream;
   }
+
+  @override
+  Stream<String> watch({required String table}) => rowsController.stream;
 
   @override
   Future<int> write({
@@ -69,6 +70,12 @@ class FakeCairnEngine implements CairnEngine {
   Future<void> close() async {
     closeCallCount++;
   }
+
+  @override
+  Future<void> disconnect() async {}
+
+  @override
+  Stream<CairnConnectionState> resume() => stateController.stream;
 }
 
 void main() {
