@@ -2,7 +2,7 @@
 // `fromRow` decodes a row from the WS2 read-view (`SELECT * FROM <table>`):
 // `_pk` is the stamped primary key; the rest are the json_extract'd payload
 // columns projected by the view `SqliteStorage::apply_schema` materializes.
-// Used by `CairnDatabase.watchMapped<T>` for reactive typed lists.
+// Consumed by `CairnDatabase.collection<T>(table, fromRow: ...)` (ADR-0024).
 //
 // The generated `cairn.g.dart` model classes exist too (cairn gen), but THIS
 // file is the presentation layer the UI consumes — it adds computed getters
