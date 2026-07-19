@@ -1,0 +1,67 @@
+# fly.toml — Cairn SYNC SERVER (one Fly app per managed-cloud project).
+#
+# This is the deploy template the cairn-cloud provisioner instantiates per
+# project (see crates/cairn-cloud + deploy/README.md). Each managed project =
+# one isolated cairn-server Fly app bound to that project's Postgres source.
+#
+# Build: uses the repo-root Dockerfile (builds cairn-server --features pg +
+# cairn-cloud; the entrypoint is cairn-server). Override the app name + region
+# per project:
+#   fly deploy --app cairn-sync-<project-id> --image-label <project-id>
+#
+# CRITICAL — do NOT auto-stop a sync server. A stopped cairn-server stops
+# consuming its Postgres logical-replication slot; once `max_slot_wal_keep_size`
+# is exceeded the slot's wal_status flips to `lost` and changes are silently
+# skipped (the P0-1 data-loss class fixed in crates/cairn-infra). So
+# `auto_stop_machines = false` + `min_machines_running = 1` are load-bearing
+# here, not cost knobs — a "sleeping" sync server is a data-loss server.
+# (See docs/plans/cairn-soundness-audit-2026-07-19.md §P0-1.)
+
+app = "cairn-sync"                 # override per project (--app)
+primary_region = "iad"             # pick a region near the customer's Postgres
+kill_signal = "SIGINT"
+kill_timeout = 30                  # let in-flight batches flush + ack LSN
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  CAIRN_REPLICATOR = "pg"
+  CAIRN_LOG = "info,cairn=info"
+  # JSON logs → OTel collector / Datadog / Honeycomb / CloudWatch friendly
+  # (the observability gap closed alongside this scaffold).
+  CAIRN_LOG_FORMAT = "json"
+  # CAIRN_PG_URL            → `fly secrets set` (NEVER commit). Per-project.
+  # CAIRN_WRITE_TABLES      → per-project allowlist (ADR-0013).
+  # CAIRN_JWT_* / JWKS_URL  → auth (ADR-0010); `fly secrets set`.
+
+[http_service]
+  internal_port = 8800
+  force_https = true
+  auto_stop_machines = false       # load-bearing — see the CRITICAL note above
+  auto_start_machines = true
+  min_machines_running = 1         # keep the slot consumed; never 0 for sync
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 2000
+    soft_limit = 1500
+
+# /metrics (Prometheus) + /healthz — the Fly load balancer probes healthz.
+# (8800 is the sync + metrics port; 9090 is the cloud control plane, deployed
+# as a SEPARATE app — this template is sync-server-only.)
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "15s"
+  method = "GET"
+  path = "/healthz"
+  timeout = "3s"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+  # Scale up per project tier (CAIRN_TIER). The 142k ops/sec @ 1k clients
+  # headroom (benches/results/RESULTS.md) means a single shared CPU serves a
+  # lot of clients; bump cpus/memory only when cairn_live_sessions or
+  # cairn_replication_lag_bytes (the new slot-health metrics) warrant it.
