@@ -69,6 +69,7 @@ impl Frame {
             cairn_domain::Operation::Delete => RowOp::Delete {
                 table: self.table,
                 pk: self.pk,
+                old_payload: None,
             },
         }
     }
