@@ -5,7 +5,7 @@
 // (see docs/plans/w4-packaging-fallback.md's W0a spike, which proved the
 // packaging mechanism in isolation; this proves the real SDK on top of it).
 //
-// Run from `sdk/cairn_flutter/example/`:
+// Run from `sdk/cairn_flutter/`:
 //   flutter test integration_test/cairn_server_test.dart -d macos
 //
 // Spins up `cargo run -p cairn-server` itself (zero-setup default:
