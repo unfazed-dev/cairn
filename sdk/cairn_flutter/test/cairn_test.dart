@@ -50,6 +50,10 @@ class FakeCairnEngine implements CairnEngine {
   Stream<String> watch({required String table}) => rowsController.stream;
 
   @override
+  Stream<({int pending, int deadLettered, String? lastError})>
+      watchWriteStatus() => const Stream.empty();
+
+  @override
   Future<int> write({
     required String table,
     required String op,
@@ -84,6 +88,10 @@ class FakeCairnEngine implements CairnEngine {
 /// can't reproduce the P0-3 regression; this fake can.
 class SnapshotOnSubscribeEngine implements CairnEngine {
   SnapshotOnSubscribeEngine({this.queryResult = '[{"id":"1","name":"Alpha"}]'});
+
+  @override
+  Stream<({int pending, int deadLettered, String? lastError})>
+      watchWriteStatus() => const Stream.empty();
 
   final stateController = StreamController<CairnConnectionState>.broadcast();
   final List<String> queries = [];

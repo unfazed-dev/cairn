@@ -75,6 +75,14 @@ class Cairn {
   /// subscription. Empty until [subscribe] has been called at least once.
   Stream<CairnConnectionState> get connectionState => _stateController.stream;
 
+  /// Durable-outbox status (queued / permanently-failed writes). Prefer
+  /// `CairnDatabase.status`, which folds this into [SyncStatus] alongside the
+  /// connection state; this is the raw stream for apps using [Cairn] directly.
+  ///
+  /// Requires a prior [subscribe]. Emits the current value on listen.
+  Stream<({int pending, int deadLettered, String? lastError})>
+      get writeStatus => _engine.watchWriteStatus();
+
   /// Materialize the WS2 read-views for [tables] in the on-device SQLite
   /// file (`CREATE VIEW IF NOT EXISTS <table> AS SELECT json_extract(...)
   /// AS col, ... FROM cairn_data WHERE table_name='<table>'` — see
