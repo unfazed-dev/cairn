@@ -20,8 +20,10 @@ flag is absent; flag wins when present.
 | `CAIRN_BIND` | `0.0.0.0:8800` | axum bind address. |
 | `CAIRN_WS_PATH` | `/sync` | WebSocket path clients connect to. |
 | `CAIRN_SESSION_BUFFER` | `1024` | Per-session bounded channel depth; slow clients that fall further behind are dropped (explicit, observable — never silent OOM). |
-| `CAIRN_REPLICATOR` | `fake` | **Critical.** `fake` = synthetic generator (zero-setup). `pg` = real Postgres logical replication. Anything else bails: `unknown CAIRN_REPLICATOR value: {other}` (`main.rs:427`). |
-| `CAIRN_PG_URL` | _empty_ | Postgres URL for `CAIRN_REPLICATOR=pg`. Empty under `pg` bails fast (`main.rs:370`, `main.rs:457`). |
+| `CAIRN_REPLICATOR` | `fake` | **Critical.** `fake` = synthetic generator (zero-setup). `pg` = real Postgres logical replication. Anything else bails: `unknown CAIRN_REPLICATOR value: {other}` (`main.rs:466`). |
+| `CAIRN_PG_URL` | _empty_ | Postgres URL for `CAIRN_REPLICATOR=pg`. Empty under `pg` bails fast (`main.rs:406`, `main.rs:497`). |
+| `CAIRN_FAKE_EPS` | `20` | Fake-replicator emission rate, events/sec. `0` = unbounded firehose. `fake` only; the benchmark builds its own config, so this never touches the moat numbers (A10). |
+| `CAIRN_FAKE_KEYS` | `50` | Fake-replicator distinct primary keys; `0` = monotonic (table grows forever). Client apply is an upsert on `(table, pk)`, so this bounds the *table* — which is what keeps a full-table watch snapshot O(1) in session length. `fake` only (A10). |
 | `CAIRN_WRITE_TABLES` | _empty_ | **Critical.** Comma-separated tables clients may write over `/sync` (ADR-0013). Empty = no tables writable — writes are rejected with `"table not writable: '<t>' — add it to CAIRN_WRITE_TABLES"` (`crates/cairn-infra/src/transport.rs:792`). Demo needs `CAIRN_WRITE_TABLES=tasks`. |
 | `CAIRN_PG_SLOT` | `cairn_slot` | Logical-replication slot name. Server creates it lazily on first connect if missing (see §2). |
 | `CAIRN_PG_PUBLICATION` | `cairn_pub` | Publication name. Must exist before `cairn dev` connects — `cairn init` creates it. |
@@ -173,9 +175,9 @@ Run this in order. Each line is **symptom → check → fix**.
    Symptom: clients connect, subscribe acks, zero rows arrive, only live
    inserts show.
    Check: `grep CAIRN_REPLICATOR .env` or read server startup logs for
-   `replicator: FakeReplicator (synthetic, unbounded)` vs
+   `replicator: FakeReplicator (synthetic; 0 = unbounded)` vs
    `replicator: PgReplicator (real Postgres logical replication)`
-   (`main.rs:363` / `main.rs:407`).
+   (`main.rs:397` / `main.rs:442`).
    Fix: `CAIRN_REPLICATOR=pg`. See §1.1 (a).
 
 2. **Is `CAIRN_WRITE_TABLES` populated?**
@@ -296,6 +298,8 @@ cairn-server [OPTIONS]
 OPTIONS (most-commonly-tuned; see §1 for the full table):
   --bind <ADDR>                         bind address              [env: CAIRN_BIND, default: 0.0.0.0:8800]
   --replicator <fake|pg>                                          [env: CAIRN_REPLICATOR, default: fake]
+  --fake-events-per-sec <N>             0 = unbounded             [env: CAIRN_FAKE_EPS, default: 20]
+  --fake-distinct-keys <N>              0 = grows forever         [env: CAIRN_FAKE_KEYS, default: 50]
   --pg-url <URL>                                                  [env: CAIRN_PG_URL, default: -]
   --write-tables <CSV>                                            [env: CAIRN_WRITE_TABLES, default: -]
   --pg-slot <NAME>                                               [env: CAIRN_PG_SLOT, default: cairn_slot]
