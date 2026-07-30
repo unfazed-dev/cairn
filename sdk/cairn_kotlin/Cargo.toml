@@ -26,8 +26,8 @@ edition = "2021"
 publish = false
 description = "UniFFI bridge exposing cairn-client's SyncClient<SqliteStorage> to Kotlin (Android) — feasibility scaffold."
 license = "Apache-2.0"
-repository = "https://github.com/cairn-sync/cairn"
-homepage = "https://cairn.dev"
+repository = "https://github.com/unfazed-dev/cairn"
+homepage = "https://github.com/unfazed-dev/cairn"  # CAIRN-IDENTITY-PENDING
 
 # Standalone workspace root — detaches from the parent cairn workspace (mirrors
 # sdk/cairn_swift/Cargo.toml + sdk/cairn_tauri/Cargo.toml + sdk/cairn_node/Cargo.toml

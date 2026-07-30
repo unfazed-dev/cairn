@@ -23,11 +23,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cairn-sync/cairn.git",
+    "url": "git+https://github.com/unfazed-dev/cairn.git",
     "directory": "sdk/cairn_web"
   },
-  "homepage": "https://github.com/cairn-sync/cairn",
+  "homepage": "https://github.com/unfazed-dev/cairn",
   "bugs": {
-    "url": "https://github.com/cairn-sync/cairn/issues"
+    "url": "https://github.com/unfazed-dev/cairn/issues"
   }
 }

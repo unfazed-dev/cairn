@@ -104,7 +104,9 @@ const routes = {
     if (!ME) { await gate(); return; }
     view.innerHTML = `<h1>Account</h1>
       <div class="card"><h2>${ME.email}</h2><p class="sub">Role: <strong>${ME.role}</strong></p>
-      <p class="note">To change your password or invite team members, contact <a href="mailto:founders@cairn.dev">founders@cairn.dev</a> (full IAM lands in a later phase).</p></div>`;
+      <p class="note">To change your password or invite team members, contact your Cairn operator (full IAM lands in a later phase).</p></div>`;
+    // CAIRN-IDENTITY-PENDING: was mailto:founders@cairn.dev, an unregistered
+    // domain — a tenant clicking it would get a bounce. See docs/IDENTITY.md.
   },
   docs() {
     view.innerHTML = `<h1>Docs & Keys</h1>

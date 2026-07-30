@@ -29,11 +29,16 @@ a reactive `Stream` of rows; `write` is a durable local outbox.
 
 ---
 
-## 2. From the landing page (cairn.dev)
+## 2. From the landing page (not yet live)
 
-The marketing site at **cairn.dev** (the `web/` SvelteKit app — "The Cairn
-Field" identity, ADR-0008) is the front door. From there you choose one of two
-paths:
+<!-- CAIRN-IDENTITY-PENDING: no domain is registered — docs/IDENTITY.md. This
+     section read "the marketing site at cairn.dev … is the front door", present
+     tense, for a site that does not exist at an unregistered domain. -->
+
+The marketing site (the `web/` SvelteKit app — "The Cairn Field" identity,
+ADR-0008) is **planned as** the front door; **no domain is registered yet**, so
+this section describes the intended flow, not something you can visit today.
+From there you would choose one of two paths:
 
 ### Path A — Cairn Cloud (managed)
 
@@ -128,7 +133,7 @@ dependencies:
   cairn_flutter:
     path: ../../sdk/cairn_flutter        # adjust to your checkout
     # git:
-    #   url: https://github.com/cairn-sync/cairn
+    #   url: https://github.com/unfazed-dev/cairn
     #   path: sdk/cairn_flutter
 ```
 

@@ -1,7 +1,7 @@
 ## 0.1.0
 
 Initial release. Plug-and-play local-first sync for Flutter, backed by
-[Cairn](https://cairn.dev): `Cairn.connect`/`subscribe`/`watch`/`write` over
+[Cairn](https://github.com/unfazed-dev/cairn): `Cairn.connect`/`subscribe`/`watch`/`write` over
 a Rust-owned SQLite + WebSocket sync loop (flutter_rust_bridge native-assets
 backend — no codegen, no Xcode/Gradle wiring). Supabase auth pass-through via
 `CairnSupabase.connect`. Platforms: macOS verified; iOS/Android build config

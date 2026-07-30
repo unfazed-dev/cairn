@@ -2,8 +2,8 @@
 name = "cairn_node"
 version = "0.1.0"
 license = "Apache-2.0"
-repository = "https://github.com/cairn-sync/cairn"
-homepage = "https://cairn.dev"
+repository = "https://github.com/unfazed-dev/cairn"
+homepage = "https://github.com/unfazed-dev/cairn"  # CAIRN-IDENTITY-PENDING
 description = "napi-rs bridge exposing cairn-client SyncClient<SqliteStorage> to Node.js."
 edition = "2021"
 publish = false

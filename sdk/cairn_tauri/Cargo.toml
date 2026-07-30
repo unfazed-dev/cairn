@@ -8,8 +8,8 @@ edition = "2021"
 publish = false
 description = "Tauri 2 plugin exposing cairn-client's SyncClient<SqliteStorage> to desktop web apps (feasibility scaffold)."
 license = "Apache-2.0"
-repository = "https://github.com/cairn-sync/cairn"
-homepage = "https://cairn.dev"
+repository = "https://github.com/unfazed-dev/cairn"
+homepage = "https://github.com/unfazed-dev/cairn"  # CAIRN-IDENTITY-PENDING
 
 [lib]
 crate-type = ["lib"]

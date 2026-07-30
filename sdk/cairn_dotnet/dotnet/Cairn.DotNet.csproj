@@ -42,12 +42,12 @@
     <PackageId>Cairn.DotNet</PackageId>
     <Version>0.1.0</Version>
     <Description>UniFFI bridge exposing cairn-client's SyncClient&lt;SqliteStorage&gt; to .NET via Nord UniFFI-CS — feasibility scaffold.</Description>
-    <Authors>Cairn Sync, Inc.</Authors>
-    <Company>Cairn Sync, Inc.</Company>
+    <Authors>unfazed-dev</Authors>
+    <Company>unfazed-dev</Company>
     <Copyright>Apache-2.0</Copyright>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageProjectUrl>https://cairn.dev</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/cairn-sync/cairn</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/unfazed-dev/cairn</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/unfazed-dev/cairn</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
 
     <!-- C# side needs unsafe for the bindgen's IntPtr / P/Invoke glue.

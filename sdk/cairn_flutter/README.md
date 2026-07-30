@@ -1,6 +1,6 @@
 # cairn_flutter
 
-Plug-and-play local-first sync for Flutter, backed by [Cairn](https://cairn.dev)
+Plug-and-play local-first sync for Flutter, backed by [Cairn](https://github.com/unfazed-dev/cairn)
 (Postgres logical replication → Rust fan-out server → on-device SQLite,
 Apache-2.0 end to end). Rust owns SQLite and the sync loop
 (`cairn-client`'s `SyncClient`); this package wraps it with

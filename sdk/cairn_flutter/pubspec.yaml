@@ -1,8 +1,9 @@
 name: cairn_flutter
 description: "Plug-and-play local-first sync for Flutter — Rust-owned SQLite + WebSocket sync loop, no connector class, no client-side schema artifact."
 version: 0.1.0
-homepage: https://cairn.dev
-repository: https://github.com/cairn-sync/cairn
+# CAIRN-IDENTITY-PENDING: no domain registered — see docs/IDENTITY.md
+homepage: https://github.com/unfazed-dev/cairn
+repository: https://github.com/unfazed-dev/cairn
 
 environment:
   sdk: ^3.12.0
