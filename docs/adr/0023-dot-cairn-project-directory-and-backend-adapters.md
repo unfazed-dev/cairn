@@ -1,6 +1,9 @@
 # ADR-0023: The `.cairn/` project directory and pluggable backend adapters
 
-- **Status:** Proposed
+- **Status:** **Accepted (shipped)** — corrected 2026-07-30, it said "Proposed" after shipping.
+  As built: `DOT_CAIRN_DIR` / `.cairn/config.json` / `.cairn/schema.json` in
+  `crates/cairn-cli/src/config.rs:178`, written by `cairn link` and `cairn pull`, plus all seven
+  subcommands (`init`, `link`, `pull`, `gen`, `dev`, `doctor`, `deploy`).
 - **Date:** 2026-07-14
 - **Related:** ADR-0001 (hexagonal ports), ADR-0007 (Supabase assembly), ADR-0019 (schema-as-views), ADR-0021 (schema discovery REST)
 
