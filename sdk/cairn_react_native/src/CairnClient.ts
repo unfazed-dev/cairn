@@ -78,11 +78,17 @@ export class CairnClient {
    * constructor, so the facade threads the config through `connect(...)`.
    */
   async connect(): Promise<void> {
-    await NativeCairn.connect(
-      this.config.url,
-      this.config.token,
-      this.config.dbPath,
-    );
+    // `url` is optional in CairnClientConfig (the constructor defaults it to
+    // null), but the native Spec requires a string. Fail here with a message
+    // naming the fix instead of handing null across the TurboModule boundary,
+    // where it surfaces as an opaque native error.
+    const { url } = this.config;
+    if (url === null || url === undefined || url === "") {
+      throw new Error(
+        "cairn: no sync URL configured — pass { url: 'ws://host:port/sync' } to the CairnClient constructor",
+      );
+    }
+    await NativeCairn.connect(url, this.config.token ?? null, this.config.dbPath);
   }
 
   /**
