@@ -23,7 +23,7 @@ import 'package:cairn_flutter/cairn_flutter.dart';
 // `SELECT * FROM tasks` works immediately — no hand-written Schema.
 final db = await CairnDatabase.connect(
   url: 'ws://127.0.0.1:8800/sync',
-  sqlitePath: '${(await getApplicationSupportDirectory()).path}/cairn.db',
+  sqlitePath: '$dir/cairn.db', // e.g. from path_provider; any writable path works
 );
 await db.subscribe('tasks'); // optional: where: "status = 'open'"
 
@@ -42,11 +42,19 @@ server schema ([ADR-0028](../../docs/adr/0028-client-read-views-over-opaque-payl
 which is why `execute` is **read-only** — route writes through `write` or a
 `Collection`.
 
+`tasks` above is a real queryable name: the read surface is one SQLite VIEW per
+synced table, named after the table (a `public.` prefix is stripped), with the
+replication key exposed as `_pk`.
+
 > **`Cairn` vs `CairnDatabase`.** `Cairn` is the low-level engine handle and is
 > still exported as an escape hatch, but `CairnDatabase` is the supported path and
 > the only one documented here. This README taught `Cairn.connect` until
 > 2026-07-30 while `USAGE.md` taught `CairnDatabase` — if you followed an older
-> copy of this file, `CairnDatabase.open` is the drop-in replacement.
+> copy of this file, `CairnDatabase.connect` is the closest drop-in. One
+> difference to note: `Cairn.connect`'s `sqlitePath` was optional (defaulting to a
+> per-URL file via `path_provider`); `CairnDatabase.connect` **requires** it, so
+> pass a path explicitly or use `CairnDatabase.open`, which derives it from
+> `sqliteDir` + the config's filename.
 
 **Multiple tables share one socket.** `subscribe(table)` is the single-table
 convenience; `subscribeTables` takes a list and multiplexes them over the same
@@ -81,7 +89,7 @@ background connection and watch pumps). `watch(table)` throws a `StateError` if
 // StateError naming the fix if there is no live session.
 final db = await CairnDatabase.supabase(
   cairnUrl: 'ws://127.0.0.1:8800/sync', // your `cairn dev` URL
-  sqlitePath: '${(await getApplicationSupportDirectory()).path}/cairn.db',
+  sqlitePath: '$dir/cairn.db', // e.g. from path_provider; any writable path works
 );
 ```
 

@@ -236,14 +236,21 @@ await db.subscribe('tasks');          // start the sync session for a table
 Throws `StateError` if no Supabase session is live — sign in first (Section 3).
 
 ```dart
+// Supabase.initialize(...) must already have run — this factory reads
+// Supabase.instance's current session itself, so it takes no Supabase args.
 final db = await CairnDatabase.supabase(
   cairnUrl: 'wss://sync.<your-project>.cairn.app/sync',
-  supabaseUrl: 'https://<project-ref>.supabase.co',
-  supabaseAnonKey: 'YOUR_KEY',
-  schema: appSchema,
+  schema: appSchema,                  // omit to fetch via GET /schema
   sqlitePath: '${dir.path}/cairn.sqlite',
 );
 ```
+
+> Corrected 2026-07-30: this sample previously passed `supabaseUrl:` and
+> `supabaseAnonKey:` to `CairnDatabase.supabase`. **Neither parameter exists** —
+> the real signature is `{cairnUrl, schema, sqlitePath}`, and it would not have
+> compiled. Pass Supabase's own URL/key to `Supabase.initialize`, or use
+> `CairnDatabase.open(config: …)`, whose `CairnConfig` *does* carry a
+> `supabaseUrl` / `supabaseAnonKey` block — that is where the confusion came from.
 
 ### Lowest-level — `CairnDatabase.connect`
 
