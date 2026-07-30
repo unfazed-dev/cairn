@@ -1,0 +1,82 @@
+# Web — `@cairn/web`
+
+Extracted from `sdk/cairn_web/index.js`, `index.d.ts`, and `crates/cairn-ffi-wasm/src/lib.rs` on
+2026-07-30. Index: [`README.md`](README.md).
+
+**This package has two different APIs and only one of them syncs.** Getting them mixed up is the
+single most likely mistake here.
+
+| Path | Entry | Live WebSocket? | Use for |
+|---|---|---|---|
+| **Browser** | `pkg-web/cairn_ffi_wasm.js` → `CairnSocket` | **Yes** — the browser's real `WebSocket` | shipping a web app |
+| **Node** | `index.js` → `CairnClient` | **No** — apply engine only | tests, replaying frames, server-side decode |
+
+If you want a synced browser app, use `CairnSocket`. If you are in Node and want real sync, you
+want [`@cairn/node`](node.md) instead.
+
+## Browser — `CairnSocket` (the live path)
+
+A `wasm_bindgen` export from `crates/cairn-ffi-wasm/src/lib.rs:398`.
+
+```js
+import init, { CairnSocket } from "./pkg-web/cairn_ffi_wasm.js";
+await init();
+
+const sock = await CairnSocket.connect("ws://127.0.0.1:8080/sync", null, "tasks", null);
+//                                     url,  token, table,   whereSql
+sock.write("tasks", "1", new TextEncoder().encode(JSON.stringify({ title: "buy milk" })));
+const rows = sock.rowsFor("tasks");          // [{ pk, payload }]
+console.log(sock.checkpoint(), sock.rowCount());
+```
+
+| Member | Notes |
+|---|---|
+| `CairnSocket.connect(url, token, table, whereSql)` | **static**, returns a `Promise<CairnSocket>`. Opens the socket *and* subscribes |
+| `write(table, pk, payload)` | payload is bytes |
+| `rowsFor(table)` | `RowEntry[]` — each has `pk()` and `payload()` (bytes) |
+| `checkpoint()` | durable LSN as a JS number |
+| `rowCount()` | applied row count |
+
+The token goes on the URL as `?token=` because **browsers cannot set headers on a WebSocket
+handshake**. `resume_lsn` is read from `localStorage["cairn:checkpoint:<table>"]`, defaulting to 0 —
+so a reload resumes rather than refetching.
+
+## Node — `CairnClient` (apply engine only)
+
+`index.js:184` exports `{ CairnClient, CairnEngine, Frame }`. Typed in `index.d.ts`:
+
+| Member | Signature |
+|---|---|
+| constructor | `new CairnClient(config?: { url?, token?, table? })` |
+| `connect` | `connect(): Promise<CairnClient>` — **does not open a socket** |
+| `subscribe` | `subscribe(table, whereSql?): CairnClient` — sets local intent, chainable |
+| `write` | `write(table, pk, payload: Uint8Array \| number[]): WriteResult` — **sync** |
+| `query` | `query(table): Row[]` — **sync**, per-table, not SQL |
+| `watch` | `watch(table, cb): () => void` — invokes `cb` immediately, returns an unsubscribe fn |
+| `checkpoint` / `rowCount` | readonly getters |
+
+`Row` is `{ pk: string, payload: Buffer }`; `WriteResult` is `{ checkpoint, rowsApplied }`.
+
+Lower-level, also exported: `CairnEngine` (`newEngine`/`setWhereSql`/`flush`/`rowsFor`/`checkpoint`/
+`rowCount`) and `Frame`, if you want to drive the apply path frame by frame.
+
+## Reads are a KV store, not SQL
+
+Unlike every SQLite-backed SDK here, the WASM apply engine keeps an **in-memory key-value store**.
+There is no `cairn_data` table and no SQL: you call `rowsFor(table)` / `query(table)` and get
+`{pk, payload}` pairs with the payload as **bytes you decode yourself**. Nothing persists across a
+reload except the `localStorage` checkpoint.
+
+## Ceilings
+
+- One table per socket.
+- No reactive stream in the browser path — poll `rowsFor` after writes, or wrap the pump yourself.
+- Payloads are bytes both directions; you own encode/decode.
+
+## Proven by
+
+Two slices. `web` runs `e2e/browser_live.spec.cjs` under Playwright: a real browser, a real
+`WebSocket`, full PUSH + ECHO against the Rust spine. `smoke.cjs` covers the Node facade and
+**explicitly does not** exercise `CairnSocket.connect()`. A latent flush bug lived here once — the
+WASM `onmessage` pump never flushed standalone frames — fixed with an unconditional
+`engine.flush()` mirroring the native client's per-batch commit.
