@@ -75,6 +75,17 @@ class FakeCairnEngine implements CairnEngine {
     closeCallCount++;
   }
 
+  /// Recorded so a test can assert `Cairn.setToken` actually delegates —
+  /// a silently-dropped refresh is the exact bug this seam exists to prevent.
+  String? lastSetToken;
+  int setTokenCalls = 0;
+
+  @override
+  Future<void> setToken(String? token) async {
+    lastSetToken = token;
+    setTokenCalls++;
+  }
+
   @override
   Future<void> disconnect() async {}
 
@@ -135,6 +146,17 @@ class SnapshotOnSubscribeEngine implements CairnEngine {
 
   @override
   Future<void> close() async {}
+
+  /// Recorded so a test can assert `Cairn.setToken` actually delegates —
+  /// a silently-dropped refresh is the exact bug this seam exists to prevent.
+  String? lastSetToken;
+  int setTokenCalls = 0;
+
+  @override
+  Future<void> setToken(String? token) async {
+    lastSetToken = token;
+    setTokenCalls++;
+  }
 
   @override
   Future<void> disconnect() async {}
@@ -412,6 +434,55 @@ void main() {
 
       await cairn.close();
       expect(engine.closeCallCount, 1);
+    });
+  });
+
+  group('Cairn.setToken', () {
+    // The bug this guards: a Supabase JWT expires in ~1h, the server enforces
+    // `exp`, and the reconnect loop re-sends whatever token it holds. If the
+    // refresh never reaches the engine, sync dies silently and the UI keeps
+    // showing local rows. Delegation is the whole contract.
+    test('forwards the new token to the engine', () async {
+      final engine = FakeCairnEngine();
+      final cairn = Cairn.withEngine(engine);
+
+      await cairn.setToken('fresh-jwt');
+
+      expect(engine.setTokenCalls, 1);
+      expect(engine.lastSetToken, 'fresh-jwt');
+    });
+
+    test('forwards null to clear the token on sign-out', () async {
+      final engine = FakeCairnEngine();
+      final cairn = Cairn.withEngine(engine);
+
+      await cairn.setToken(null);
+
+      expect(engine.setTokenCalls, 1);
+      expect(engine.lastSetToken, isNull);
+    });
+
+    test('does not disturb an active watch stream', () async {
+      // setToken must be non-destructive: the pure-Dart alternative was to
+      // rebuild the handle, which ends every watch stream (`_replayLatest` wires
+      // `onDone: controller.close`) and would look to the user like data
+      // vanishing an hour after login.
+      final engine = FakeCairnEngine();
+      final cairn = Cairn.withEngine(engine);
+      await cairn.subscribe('tasks');
+      final seen = <List<Map<String, dynamic>>>[];
+      var streamDone = false;
+      cairn.watch('tasks').listen(seen.add, onDone: () => streamDone = true);
+
+      engine.rowsController.add('[{"pk":"1","title":"before"}]');
+      await Future<void>.delayed(Duration.zero);
+      await cairn.setToken('fresh-jwt');
+      engine.rowsController.add('[{"pk":"1","title":"after"}]');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(streamDone, isFalse, reason: 'setToken must not close watch streams');
+      expect(seen.length, 2, reason: 'rows must keep flowing across a refresh');
+      expect(seen.last.first['title'], 'after');
     });
   });
 }
