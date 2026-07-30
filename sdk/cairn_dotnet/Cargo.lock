@@ -326,7 +326,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-dotnet"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "cairn-client",
  "cairn-core",

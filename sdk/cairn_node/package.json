@@ -1,6 +1,6 @@
 {
   "name": "@cairn/node",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "napi-rs scaffold exposing cairn-client SyncClient<SqliteStorage> to Node.js (feasibility proof, not a polished SDK)",
   "main": "cairn_node.node",
   "scripts": {
@@ -16,5 +16,14 @@
   "devDependencies": {
     "@napi-rs/cli": "^2"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cairn-sync/cairn.git",
+    "directory": "sdk/cairn_node"
+  },
+  "homepage": "https://github.com/cairn-sync/cairn",
+  "bugs": {
+    "url": "https://github.com/cairn-sync/cairn/issues"
+  }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@cairn/web",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "PowerSync-style JS facade over cairn-ffi-wasm (browser: live WS via web-sys; node: apply engine only)",
   "main": "index.js",
   "types": "index.d.ts",
@@ -20,5 +20,14 @@
   ],
   "devDependencies": {
     "@playwright/test": "^1.40.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cairn-sync/cairn.git",
+    "directory": "sdk/cairn_web"
+  },
+  "homepage": "https://github.com/cairn-sync/cairn",
+  "bugs": {
+    "url": "https://github.com/cairn-sync/cairn/issues"
   }
 }

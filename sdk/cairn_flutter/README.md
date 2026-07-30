@@ -30,12 +30,30 @@ cairn.watch('tasks').listen((rows) {
 await cairn.write('tasks', op: 'upsert', pk: '1', payload: {'title': 'buy milk'});
 ```
 
-`subscribe`/`watch` model **one active subscription per `Cairn` instance** —
-this mirrors `cairn-client`'s `SyncClient`, which binds one table at
-construction. Calling `subscribe` again replaces the previous subscription.
-Need more than one table at once? Use a second `Cairn.connect(...)` instance
-for now (ponytail — a future multi-table `cairn-client` session removes this
-constraint).
+**Multiple tables share one socket.** `subscribe(table)` is the single-table
+convenience; `subscribeTables` takes a list and multiplexes them over the same
+`/sync` connection (D1 / [ADR-0022](../../docs/adr/0022-flutter-multitable-sync-and-pause-resume.md)),
+each with its own optional predicate:
+
+```dart
+await cairn.subscribeTables([
+  CairnTableSub(name: 'tasks', whereSql: "status = 'open'"),
+  CairnTableSub(name: 'projects'),
+]);
+
+cairn.watch('tasks').listen((rows) { /* ... */ });
+cairn.watch('projects').listen((rows) { /* ... */ });
+```
+
+One *subscription set* is active per `Cairn` instance: calling `subscribe` or
+`subscribeTables` again **replaces** the previous set (tearing down its
+background connection and watch pumps). `watch(table)` throws a `StateError` if
+`table` is not in the active set — so subscribe first.
+
+> Corrected 2026-07-30: this section previously said one *table* per instance and
+> advised opening a second `Cairn.connect(...)` for a second table. That was
+> stale — it predates multi-table subscription, and following it opens a
+> redundant socket.
 
 ### Supabase
 
