@@ -11,11 +11,17 @@
 // xcframework would slot into.
 //
 // ponytail: this Package currently exposes Cairn as a regular target whose
-// sources are the UniFFI-generated `cairn_swift.swift` (and a thin re-export
-// shim under Sources/Cairn/). To ship, replace the `.target` with a
-// `.binaryTarget(path: "../xcframework/Cairn.xcframework")` once the
-// xcframework is built (cargo build --release for macos + ios targets, then
-// xcodebuild -create-xcframework).
+// source is the hand-written `AsyncStream`-based `watch(table:)` facade in
+// `Sources/Cairn/Cairn.swift` (built on the UniFFI-generated
+// `swift-sources/cairn_swift.swift`, which declares `CairnClient` +
+// `SnapshotSink`). The generated sources + `cairn_swiftFFI` modulemap are NOT
+// wired into this SPM target yet — `swiftc -typecheck …` (see the README gate)
+// is the verification floor; `swift build` here will NOT resolve
+// `CairnClient`/`SnapshotSink` until the binary-target increment lands. To ship,
+// replace the `.target` with a `.binaryTarget(path: "../xcframework/Cairn.xcframework")`
+// once the xcframework is built (cargo build --release for macos + ios targets,
+// then xcodebuild -create-xcframework) and add the generated `.swift` +
+// modulemap as a co-compiled source set.
 
 import PackageDescription
 
