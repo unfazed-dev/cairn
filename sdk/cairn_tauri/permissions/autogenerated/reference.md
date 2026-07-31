@@ -1,6 +1,6 @@
 ## Default Permission
 
-Cairn Tauri plugin — default permissions for the connect/subscribe/write/query/checkpoint surface. A shipped plugin would add scoped per-table permission sets; this scaffold grants all five commands unconditionally.
+Cairn Tauri plugin — default permissions for the connect/subscribe/write/query/checkpoint/watch surface. A shipped plugin would add scoped per-table permission sets; this scaffold grants all six commands unconditionally.
 
 #### This default permission set includes the following:
 
@@ -9,6 +9,7 @@ Cairn Tauri plugin — default permissions for the connect/subscribe/write/query
 - `allow-write`
 - `allow-query`
 - `allow-checkpoint`
+- `allow-watch`
 
 ## Permission Table
 
@@ -119,6 +120,32 @@ Enables the subscribe command without any pre-configured scope.
 <td>
 
 Denies the subscribe command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`cairn-tauri:allow-watch`
+
+</td>
+<td>
+
+Enables the watch command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`cairn-tauri:deny-watch`
+
+</td>
+<td>
+
+Denies the watch command without any pre-configured scope.
 
 </td>
 </tr>

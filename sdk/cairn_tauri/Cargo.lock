@@ -375,6 +375,7 @@ dependencies = [
  "cairn-client",
  "cairn-core",
  "cairn-domain",
+ "serde",
  "serde_json",
  "tauri",
  "tauri-plugin",

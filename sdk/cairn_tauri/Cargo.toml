@@ -36,6 +36,7 @@ cairn-core = { path = "../../crates/cairn-core" }
 cairn-domain = { path = "../../crates/cairn-domain" }
 
 tauri = "2"
+serde = { version = "1", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.39", features = ["rt-multi-thread", "sync", "macros"] }
 
