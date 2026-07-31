@@ -170,6 +170,31 @@ class CairnClient {
     };
   }
 
+  /**
+   * Sign out (ADR-0029): wipe the apply engine's in-memory rows + outbox and
+   * drop the cached token, so a subsequent principal on the same process sees
+   * none of the previous user's rows or pending writes. Maps to
+   * `CairnEngine.clear()` (the wasm seam added for WS4-D3). The node proof has
+   * no live socket to close; the browser Worker additionally closes the socket
+   * (see worker/cairn.worker.js `signOut`).
+   * @returns {void}
+   */
+  signOut() {
+    this._engine.clear();
+    this._config.token = null;
+    this._connected = false;
+  }
+
+  /**
+   * Swap the auth token (ADR-0029 §3). The node proof has no live transport, so
+   * this just caches the new token for the next `connect`. The browser Worker
+   * reconnects the socket on token swap (see worker/cairn.worker.js `setToken`).
+   * @param {string|null} newToken
+   */
+  setToken(newToken) {
+    this._config.token = newToken ?? null;
+  }
+
   /** Current durable checkpoint (the LSN to resume from on reconnect). */
   get checkpoint() {
     return this._engine.checkpoint;
