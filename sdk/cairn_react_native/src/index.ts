@@ -9,6 +9,7 @@ export type {
   CairnClientConfig,
   Row,
   Subscription,
+  WatchSubscription,
   WriteOp,
 } from "./CairnClient";
 export type { Spec as NativeCairnSpec } from "./NativeCairn";
