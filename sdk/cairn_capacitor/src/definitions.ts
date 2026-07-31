@@ -74,6 +74,35 @@ export interface CairnRow {
   payload: unknown;
 }
 
+/** Options passed to {@link CairnPlugin.watch}. */
+export interface WatchOptions {
+  table: string;
+}
+
+/**
+ * A reactive snapshot delivered to a {@link CairnPlugin.watch} listener.
+ *
+ * `kind` is `"initial"` for the first emit — the engine's current rows for the
+ * table, delivered as soon as the listener is registered — and `"delta"` for
+ * every subsequent emit, after an inbound commit changes the table's rows.
+ */
+export interface CairnWatchSnapshot {
+  /** `"initial"` = first emit with current state; `"delta"` = a post-commit emit. */
+  kind: "initial" | "delta";
+  /** The table these rows belong to. */
+  table: string;
+  /** The engine's current rows for `table` at emit time. */
+  rows: CairnRow[];
+}
+
+/**
+ * Handle returned by {@link CairnPlugin.watch}. Call `unsubscribe()` to stop
+ * further emits for this listener; idempotent.
+ */
+export interface CairnWatchSubscription {
+  unsubscribe(): void;
+}
+
 /** Options for {@link CairnPlugin.configure}. */
 export interface ConfigureOptions {
   /**
@@ -115,6 +144,29 @@ export interface CairnPlugin {
 
   /** Read the rows the engine currently holds for `table`. */
   query(options: QueryOptions): Promise<{ rows: CairnRow[] }>;
+
+  /**
+   * Subscribe to a table's changing row set.
+   *
+   * The `listener` fires immediately with the engine's current rows
+   * (`kind: "initial"`), then again with `kind: "delta"` after each inbound
+   * commit that changes the table. Returns a subscription whose
+   * `unsubscribe()` stops further emits (idempotent).
+   *
+   * ponytail: the `delta` path requires a JS-facing change-callback seam on the
+   * wasm `CairnSocket` (Rust `on_change`, landing as JS `onChange` or similar)
+   * that does not yet exist in the shipped `pkg-web` build — the socket's only
+   * callbacks today are its internal WS handlers (`on_open`/`on_message`/...).
+   * The web-SDK port has the seam in flight. Until it lands, `watch()` delivers
+   * the initial snapshot only — the same bar `@cairn/web`'s own `watch()` sets.
+   * The delta hook probes the candidate seam names and lights up the moment the
+   * seam is present, with no API change to callers. This is NOT polling — emits
+   * are event-driven by the change callback, never a timer.
+   */
+  watch(
+    options: WatchOptions,
+    listener: (snapshot: CairnWatchSnapshot) => void,
+  ): Promise<CairnWatchSubscription>;
 
   /** Read the durable checkpoint (the LSN to resume from on reconnect). */
   checkpoint(): Promise<{ checkpoint: number }>;

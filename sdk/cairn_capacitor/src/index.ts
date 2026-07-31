@@ -25,9 +25,12 @@ export type {
   CairnConnectResult,
   CairnPlugin,
   CairnRow,
+  CairnWatchSnapshot,
+  CairnWatchSubscription,
   ConfigureOptions,
   ConnectOptions,
   QueryOptions,
+  WatchOptions,
   WriteOptions,
 } from "./definitions";
 export { CairnWeb } from "./web";
