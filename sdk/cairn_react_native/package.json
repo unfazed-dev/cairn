@@ -52,5 +52,10 @@
   "homepage": "https://github.com/unfazed-dev/cairn",
   "bugs": {
     "url": "https://github.com/unfazed-dev/cairn/issues"
+  },
+  "codegenConfig": {
+    "name": "NativeCairn",
+    "type": "modules",
+    "jsSrcsDir": "src"
   }
 }
