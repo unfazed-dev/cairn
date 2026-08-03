@@ -482,6 +482,20 @@ class CairnDatabase {
     await _cairn.close();
   }
 
+  /// ADR-0029: sign out — wipe the local store + durable outbox (the next
+  /// principal sees nothing of this one), stop sync, clear the seed token, and
+  /// cancel the auth/status listeners. Unlike [close], the on-device SQLite
+  /// state is wiped via `clear_local_state`. Idempotent.
+  Future<void> signOut() async {
+    // Auth listener first (as in close): a surviving refresh would call
+    // setToken on a wiped engine.
+    await _authSub?.cancel();
+    await _statusSub?.cancel();
+    await _writeStatusSub?.cancel();
+    _status?.dispose();
+    await _cairn.signOut();
+  }
+
   /// Pause syncing (delegate to [Cairn.disconnect]); reads/writes/UI keep
   /// working offline. See `Cairn.disconnect`.
   Future<void> disconnect() => _cairn.disconnect();
