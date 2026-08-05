@@ -64,3 +64,9 @@ sdk/cairn_react_native/example/
 sdk/cairn_react_native/ios/cairn_swift.swift
 sdk/cairn_react_native/ios/ffi/
 sdk/cairn_react_native/ios/libcairn_swift.a
+
+# --- Local MCP wiring + Supabase CLI scratch (machine/project-local, never commit) ---
+# .mcp.json pins this checkout to one operator's Supabase project; supabase/.temp/
+# is CLI scratch. Neither belongs in the shared OSS repo.
+.mcp.json
+supabase/.temp/
