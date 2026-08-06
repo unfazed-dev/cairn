@@ -460,6 +460,8 @@ dependencies = [
  "cairn-infra",
  "cairn-license",
  "clap",
+ "reqwest",
+ "serde",
  "serde_json",
  "tokio",
  "tower-http 0.5.2",
