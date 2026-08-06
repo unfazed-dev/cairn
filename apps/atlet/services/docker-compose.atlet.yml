@@ -1,0 +1,51 @@
+# Local-profile services for the Atlet cairn-vs-PowerSync comparison (Task 5
+# of docs/plans/atlet-cairn-vs-powersync-app-suite.md). Both services point
+# at the SAME hosted Supabase Postgres — no local Postgres container here,
+# unlike docker/docker-compose*.yml at the repo root (those are cairn's own
+# e2e stack against a throwaway local Postgres; different project name and
+# ports, so this stack can run alongside them without colliding).
+#
+# Usage:
+#   cd apps/atlet/services && cp .env.example .env   # fill in real values
+#   docker compose -f docker-compose.atlet.yml config -q
+#   docker compose -f docker-compose.atlet.yml up -d
+name: atlet-services
+
+services:
+  cairn-server:
+    build:
+      context: ../../..    # apps/atlet/services -> repo root
+      dockerfile: Dockerfile   # repo root Dockerfile, not docker/Dockerfile (brief's draft path doesn't exist)
+    environment:
+      CAIRN_BIND: "0.0.0.0:8080"   # must match the ports mapping below; default is 8800
+      CAIRN_REPLICATOR: pg
+      CAIRN_PG_URL: ${ATLET_PG_URL}
+      # Reuse the publication migration 0002_powersync_replication.sql already
+      # scoped to sessions+products, instead of the default cairn_pub (which
+      # cairn would auto-create as CREATE PUBLICATION ... FOR ALL TABLES --
+      # too broad for a shared Supabase project).
+      CAIRN_PG_PUBLICATION: powersync
+      CAIRN_PG_SLOT: atlet_cairn_slot
+      CAIRN_WRITE_TABLES: ${CAIRN_WRITE_TABLES}
+      # Supabase-JWT auth (ADR-0010/0011): tenant_id == JWT sub == auth.uid().
+      # Atlet's sessions table scopes by user_id, not the default org_id.
+      CAIRN_SYNC_AUTH: supabase-jwt
+      CAIRN_TENANT_COLUMN: user_id
+      CAIRN_SUPABASE_URL: ${SUPABASE_URL}
+      CAIRN_SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET}
+    ports: ["8080:8080"]
+
+  powersync:
+    image: journeyapps/powersync-service:latest
+    command: ["start", "-r", "unified"]
+    environment:
+      POWERSYNC_CONFIG_PATH: /config/config.yaml
+      # journeyapps/powersync-service only substitutes !env tags for
+      # container env vars prefixed PS_ (confirmed against
+      # powersync-ja/self-host-demo's services/powersync.yaml) -- alias the
+      # human-readable .env names into that prefix here rather than renaming
+      # the shared .env.example vars.
+      PS_DATA_SOURCE_URI: ${POWERSYNC_PG_URL}
+      PS_SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET}
+    volumes: ["./powersync:/config:ro"]
+    ports: ["8081:80"]
