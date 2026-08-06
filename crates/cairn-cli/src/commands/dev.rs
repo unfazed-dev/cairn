@@ -24,7 +24,8 @@ pub async fn run(cwd: &Path) -> Result<()> {
     let jwt_secret = dotenv_vars
         .get("CAIRN_SUPABASE_JWT_SECRET")
         .map(String::as_str);
-    let env_pairs = cfg.server_env(&pg_url, jwt_secret);
+    let mut env_pairs = cfg.server_env(&pg_url, jwt_secret);
+    push_rules_file_env(&mut env_pairs, cwd);
 
     let binary = locate_server_binary();
     println!("Starting cairn-server ({})...", binary.describe());
@@ -60,6 +61,19 @@ pub async fn run(cwd: &Path) -> Result<()> {
         .context("waiting for cairn-server to exit")?;
     println!("cairn-server exited: {status}");
     Ok(())
+}
+
+/// `CairnConfig::server_env` knows nothing about the project directory, so
+/// the `cairn_rules.toml` default on the server's `Config` resolves *by
+/// coincidence* (the child inherits our cwd). Make the path explicit instead
+/// of relying on that. Not folded into `server_env` itself — `deploy.rs`
+/// conceptually shares that helper's shape, where the rules file ships
+/// inside the image and the server's own relative default is correct.
+fn push_rules_file_env(env_pairs: &mut Vec<(String, String)>, cwd: &Path) {
+    env_pairs.push((
+        "CAIRN_RULES_FILE".to_string(),
+        cwd.join("cairn_rules.toml").display().to_string(),
+    ));
 }
 
 async fn ctrl_c_or_pending() {
@@ -144,4 +158,22 @@ fn print_startup_banner(cfg: &CairnConfig) {
     println!("      token: supabaseSession.accessToken,");
     println!("    );");
     println!();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dev_env_includes_absolute_rules_file_path() {
+        let mut env_pairs = Vec::new();
+        let cwd = Path::new("/some/project/dir");
+        push_rules_file_env(&mut env_pairs, cwd);
+        let (_k, v) = env_pairs
+            .iter()
+            .find(|(k, _)| k == "CAIRN_RULES_FILE")
+            .expect("CAIRN_RULES_FILE present");
+        assert_eq!(v, &cwd.join("cairn_rules.toml").display().to_string());
+        assert!(Path::new(v).is_absolute());
+    }
 }
