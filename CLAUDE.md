@@ -41,6 +41,7 @@ on warnings.
 - `make bench` — throughput benchmark. Record environment; report drop rates; never compare
   eval-only numbers against end-to-end numbers.
 - `cargo run -p cairn-client --example reactive_scroll` — end-to-end native demo.
+- `cairn rules init|edit|check` — generate/edit/validate `cairn_rules.toml` (ADR-0031: `all`/`toggles`/`hand` sync modes). No file on disk = `all` (zero-config).
 
 ## Conventions
 - Commits: single line, conventional prefix, no author mentions.
