@@ -204,6 +204,16 @@ class CairnClient {
   get rowCount() {
     return this._engine.rowCount;
   }
+
+  /**
+   * Storage backend mode (ADR-0033). Always "memory" in the node smoke — OPFS
+   * is browser-only. The browser Worker surfaces "durable" when sqlite-wasm +
+   * opfs-sahpool init succeeds, "memory" on the degrade path.
+   * @returns {"memory"}
+   */
+  get storageMode() {
+    return "memory";
+  }
 }
 
 module.exports = { CairnClient, CairnEngine: () => wasm().CairnEngine, Frame: () => wasm().Frame };
