@@ -30,10 +30,4 @@ export 'src/cairn_config.dart' show CairnConfig;
 export 'src/schema.dart' show CairnSchema, CairnTable, CairnColumn;
 export 'src/predicate.dart' show Where, Order;
 export 'src/cairn_database.dart'
-    show
-        CairnDatabase,
-        Collection,
-        SyncStatus,
-        CairnWrite,
-        DeadLetter,
-        WriteBatchPartialError;
+    show CairnDatabase, Collection, SyncStatus, CairnWrite, DeadLetter;
