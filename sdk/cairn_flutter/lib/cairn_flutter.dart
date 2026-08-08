@@ -31,3 +31,15 @@ export 'src/schema.dart' show CairnSchema, CairnTable, CairnColumn;
 export 'src/predicate.dart' show Where, Order;
 export 'src/cairn_database.dart'
     show CairnDatabase, Collection, SyncStatus, CairnWrite, DeadLetter;
+// T6 attachments (ADR-0034): two-plane blob sync. The metadata table syncs
+// through Cairn; the blob plane is the app's AttachmentStorageAdapter.
+export 'src/attachments.dart'
+    show
+        Attachments,
+        AttachmentStorageAdapter,
+        SupabaseStorageAdapter,
+        BlobStore,
+        LocalFileBlobStore,
+        AttachmentRow,
+        AttachmentSchema,
+        AttachmentStateWire;

@@ -58,6 +58,16 @@ EXPECTED_METHODS: list[tuple[str, str, str]] = [
     (str(SDK_LIB / "cairn_database.dart"), "upsertRow", "Collection"),
     (str(SDK_LIB / "cairn_database.dart"), "patch", "Collection"),
     (str(SDK_LIB / "cairn_database.dart"), "delete", "Collection"),
+    # T6 attachments (ADR-0034) — CairnDatabase hook + Attachments driver
+    (str(SDK_LIB / "cairn_database.dart"), "registerSignOutHook", "CairnDatabase"),
+    (str(SDK_LIB / "attachments.dart"), "attachments", "AttachmentDatabase"),
+    (str(SDK_LIB / "attachments.dart"), "queueUpload", "Attachments"),
+    (str(SDK_LIB / "attachments.dart"), "queueDownload", "Attachments"),
+    (str(SDK_LIB / "attachments.dart"), "remove", "Attachments"),
+    (str(SDK_LIB / "attachments.dart"), "pump", "Attachments"),
+    (str(SDK_LIB / "attachments.dart"), "start", "Attachments"),
+    (str(SDK_LIB / "attachments.dart"), "stop", "Attachments"),
+    (str(SDK_LIB / "attachments.dart"), "lastErrorFor", "Attachments"),
     # Predicate library
     (str(SDK_LIB / "predicate.dart"), "eq", "Where"),
     (str(SDK_LIB / "predicate.dart"), "neq", "Where"),
