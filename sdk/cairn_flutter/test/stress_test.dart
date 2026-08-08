@@ -37,6 +37,8 @@ class _FakeEngine implements CairnEngine {
   @override
   Stream<CairnConnectionState> subscribe({
     required List<CairnTableSub> tables,
+    Set<String> orSetTables = const <String>{},
+    Set<String> counterTables = const <String>{},
   }) =>
       stateController.stream;
 

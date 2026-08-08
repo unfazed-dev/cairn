@@ -140,6 +140,8 @@ abstract class RustLibApi extends BaseApi {
   Stream<CairnConnectionState> crateApiCairnCairnHandleSubscribe({
     required CairnHandle that,
     required List<TableSubFfi> tables,
+    required List<String> orSetTables,
+    required List<String> counterTables,
   });
 
   Stream<String> crateApiCairnCairnHandleWatch({
@@ -640,6 +642,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Stream<CairnConnectionState> crateApiCairnCairnHandleSubscribe({
     required CairnHandle that,
     required List<TableSubFfi> tables,
+    required List<String> orSetTables,
+    required List<String> counterTables,
   }) {
     final stateSink = RustStreamSink<CairnConnectionState>();
     unawaited(
@@ -656,6 +660,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
               stateSink,
               serializer,
             );
+            sse_encode_list_String(orSetTables, serializer);
+            sse_encode_list_String(counterTables, serializer);
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
@@ -668,7 +674,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             decodeErrorData: sse_decode_String,
           ),
           constMeta: kCrateApiCairnCairnHandleSubscribeConstMeta,
-          argValues: [that, tables, stateSink],
+          argValues: [that, tables, stateSink, orSetTables, counterTables],
           apiImpl: this,
         ),
       ),
@@ -679,7 +685,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiCairnCairnHandleSubscribeConstMeta =>
       const TaskConstMeta(
         debugName: "CairnHandle_subscribe",
-        argNames: ["that", "tables", "stateSink"],
+        argNames: [
+          "that",
+          "tables",
+          "stateSink",
+          "orSetTables",
+          "counterTables",
+        ],
       );
 
   @override
@@ -1850,11 +1862,16 @@ class CairnHandleImpl extends RustOpaque implements CairnHandle {
   /// SQLite store fails. Once subscribed, network/session errors surface
   /// only as `state_sink` transitions (reconnect is automatic and silent,
   /// matching `SyncClient::run_with_reconnect`'s contract).
-  Stream<CairnConnectionState> subscribe({required List<TableSubFfi> tables}) =>
-      RustLib.instance.api.crateApiCairnCairnHandleSubscribe(
-        that: this,
-        tables: tables,
-      );
+  Stream<CairnConnectionState> subscribe({
+    required List<TableSubFfi> tables,
+    required List<String> orSetTables,
+    required List<String> counterTables,
+  }) => RustLib.instance.api.crateApiCairnCairnHandleSubscribe(
+    that: this,
+    tables: tables,
+    orSetTables: orSetTables,
+    counterTables: counterTables,
+  );
 
   /// Attach a row stream for `table`: emits the current full row set
   /// immediately (the durable snapshot already on disk — visible offline)

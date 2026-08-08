@@ -132,6 +132,8 @@ class WebCairnEngine implements CairnEngine {
   @override
   Stream<CairnConnectionState> subscribe({
     required List<CairnTableSub> tables,
+    Set<String> orSetTables = const <String>{},
+    Set<String> counterTables = const <String>{},
   }) {
     // Emit `connecting` on the next microtask so a listener attached in the
     // same synchronous turn (the common `subscribe(...).listen(...)` pattern)
@@ -147,6 +149,10 @@ class WebCairnEngine implements CairnEngine {
         'tables': tables
             .map((t) => {'name': t.name, 'whereSql': t.whereSql})
             .toList(),
+        // CRDT-table tagging: the Worker calls CairnSocket.setCrdtTables with
+        // these right after connect (ADR-0030 / ADR-0032 T4). Empty = no CRDT.
+        'orSetTables': orSetTables.toList(),
+        'counterTables': counterTables.toList(),
       }).then((_) {}).catchError((Object e) {
         _stateController.add(CairnConnectionState.disconnected);
       }),

@@ -99,7 +99,11 @@ class _AttachFakeEngine implements CairnEngine {
 
   // ──────────────────── unused-but-required CairnEngine surface ────────────────────
   @override
-  Stream<CairnConnectionState> subscribe({required List<CairnTableSub> tables}) =>
+  Stream<CairnConnectionState> subscribe({
+    required List<CairnTableSub> tables,
+    Set<String> orSetTables = const <String>{},
+    Set<String> counterTables = const <String>{},
+  }) =>
       stateController.stream;
   @override
   Stream<String> watch({required String table}) => rowsController.stream;

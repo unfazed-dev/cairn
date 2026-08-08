@@ -36,11 +36,23 @@ class RustCairnEngine implements CairnEngine {
   final rust.CairnHandle _handle;
 
   @override
-  Stream<CairnConnectionState> subscribe({required List<CairnTableSub> tables}) {
+  Stream<CairnConnectionState> subscribe({
+    required List<CairnTableSub> tables,
+    Set<String> orSetTables = const <String>{},
+    Set<String> counterTables = const <String>{},
+  }) {
     final ffiTables = tables
         .map((t) => rust.TableSubFfi(name: t.name, whereSql: t.whereSql))
         .toList(growable: false);
-    return _handle.subscribe(tables: ffiTables).map(_mapState);
+    // Threaded into SyncClientConfig (verb gate) + SqliteStorage (apply merge)
+    // at subscribe — see CairnHandle::subscribe. Empty by default (no CRDT).
+    return _handle
+        .subscribe(
+          tables: ffiTables,
+          orSetTables: orSetTables.toList(),
+          counterTables: counterTables.toList(),
+        )
+        .map(_mapState);
   }
 
   @override
