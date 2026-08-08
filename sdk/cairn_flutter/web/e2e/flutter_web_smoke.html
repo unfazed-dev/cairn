@@ -1,0 +1,93 @@
+<!doctype html>
+<!--
+  flutter_web_smoke.html — Playwright harness for the Flutter-web Worker (ADR-0036).
+
+  This is the browser half of the Flutter-web smoke. It spawns the Flutter-web
+  Worker (`cairn/cairn_worker.js`) and drives WebCairnEngine's boundary protocol
+  directly from JS — connect, watch, write — surfacing every push + response on
+  `window.cairn*` for the Playwright spec to poll. The Dart WebCairnEngine layer
+  (the pure-Dart protocol fanout) is covered by test/engine_web_test.dart; this
+  page proves the JS Worker asset itself boots the shared wasm backend, connects
+  to a live server, applies a write, and pushes the reactive snapshot back.
+
+  Real browser only (FileSystemSyncAccessHandle / OPFS path; falls back to
+  memory if sqlite-wasm isn't served — the Safari-Private-Browsing degrade).
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cairn Flutter-web Worker smoke</title>
+  </head>
+  <body>
+    <h1>Cairn Flutter-web Worker smoke (ADR-0036)</h1>
+    <p id="status">spawning worker…</p>
+    <script type="module">
+      const log = (m) => console.log("[flutter-web-smoke] " + m);
+      const worker = new Worker("/cairn/cairn_worker.js", { type: "module" });
+
+      const pending = new Map();
+      let nextId = 1;
+      window.cairnEvents = [];
+      window.cairnSnapshots = [];
+      window.cairnConnected = null;
+      window.cairnStorage = null;
+      window.cairnErrors = [];
+
+      worker.onerror = (e) => {
+        window.cairnErrors.push("worker.onerror: " + (e.message || e));
+      };
+
+      worker.onmessage = (ev) => {
+        const d = ev.data || {};
+        // Unsolicited push (has `type`).
+        if (d.type) {
+          window.cairnEvents.push(d);
+          if (d.type === "snapshot") {
+            window.cairnSnapshots.push(d);
+            log("snapshot " + d.table + " (" + (d.json || "").length + " bytes)");
+          } else if (d.type === "status") {
+            window.cairnConnected = !!d.connected;
+            log("status connected=" + d.connected);
+          } else if (d.type === "storage") {
+            window.cairnStorage = d.mode;
+            log("storage mode=" + d.mode + (d.error ? " err=" + d.error : ""));
+          } else if (d.type === "writeStatus") {
+            log("writeStatus pending=" + d.pending);
+          }
+          return;
+        }
+        // Request response (has `id`).
+        const id = d.id;
+        if (id != null && pending.has(id)) {
+          pending.get(id)(d);
+          pending.delete(id);
+        }
+      };
+
+      function request(msg) {
+        return new Promise((resolve, reject) => {
+          const id = nextId++;
+          pending.set(id, (d) => (d.error ? reject(new Error(d.error)) : resolve(d)));
+          worker.postMessage({ ...msg, id });
+        });
+      }
+
+      window.cairnConnect = (url, table) =>
+        request({
+          cmd: "connect",
+          url,
+          token: null,
+          tables: [{ name: table, whereSql: null }],
+        });
+
+      window.cairnWrite = (table, pk, payloadJson) =>
+        request({ cmd: "write", table, op: "upsert", pk, payloadJson });
+
+      window.cairnWatch = (table) =>
+        worker.postMessage({ cmd: "watch", table });
+
+      document.getElementById("status").textContent = "worker spawned — drive via window.cairn*";
+      log("harness ready");
+    </script>
+  </body>
+</html>

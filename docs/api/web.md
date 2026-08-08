@@ -13,6 +13,13 @@ single most likely mistake here.
 If you want a synced browser app, use the Worker architecture (below). If you are in Node and want
 real sync, you want [`@cairn/node`](node.md) instead.
 
+> **Flutter-web shares this backend (ADR-0036).** `cairn_flutter` compiled to web
+> does NOT use `frb_generated.web.dart`; it drives the *same* `cairn-ffi-wasm`
+> artifact below through its own Worker (`sdk/cairn_flutter/web/cairn/`,
+> protocol-adapted for the Dart `CairnEngine` seam). So a Flutter-web app gets
+> the same OPFS durability + memory degrade as `@cairn/web`. See
+> [`flutter.md`](flutter.md#flutter-web-adr-0036).
+
 ## Browser — the Worker architecture (ADR-0017 / ADR-0024 / ADR-0033)
 
 The browser SDK runs entirely inside a **Web Worker** (`sdk/cairn_web/worker/cairn.worker.js`).

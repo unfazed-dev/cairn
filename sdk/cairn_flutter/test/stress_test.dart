@@ -23,6 +23,8 @@ import 'package:cairn_flutter/src/schema.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _FakeEngine implements CairnEngine {
+  @override
+  Stream<bool> get webStorageDegraded => const Stream<bool>.empty();
   final rowsController = StreamController<String>.broadcast();
   final stateController = StreamController<CairnConnectionState>.broadcast();
   String queryResult = '[]';
