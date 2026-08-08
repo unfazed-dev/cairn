@@ -86,6 +86,21 @@
       window.cairnWatch = (table) =>
         worker.postMessage({ cmd: "watch", table });
 
+      // Wave 4c (ADR-0036): CRDT + atomic-writeBatch driver surface. These
+      // exercise the new CairnSocket delegates through the real Worker/wasm
+      // path — proving the verbs ship over the live socket, not just enqueue.
+      window.cairnSetCrdtTables = (orSet, counter) =>
+        request({ cmd: "setCrdtTables", orSet, counter });
+
+      window.cairnCounterIncrement = (table, pk, delta) =>
+        request({ cmd: "counterIncrement", table, pk, delta });
+
+      window.cairnOrSetAdd = (table, pk, element) =>
+        request({ cmd: "orSetAdd", table, pk, element });
+
+      window.cairnWriteBatch = (ops) =>
+        request({ cmd: "writeBatch", ops });
+
       document.getElementById("status").textContent = "worker spawned — drive via window.cairn*";
       log("harness ready");
     </script>

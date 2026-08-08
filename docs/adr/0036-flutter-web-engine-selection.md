@@ -1,9 +1,13 @@
 # ADR-0036: Flutter-web engine selection (shared cairn-ffi-wasm over frb.web)
 
-- **Status:** Implemented (Wave 4b) — `flutter test` green (59/0), `flutter build web`
-  green for `cairn_flutter` (example) and `atlet`, `dart analyze` clean on new files.
-  Browser Playwright smoke not run in the worktree (asset/server orchestration;
-  see Verification).
+- **Status:** Implemented (Wave 4b) + **Wave 4c CRDT/writeBatch gap CLOSED** — the
+  four CRDT verbs + atomic `writeBatch` now ship on Flutter-web via thin
+  `CairnSocket` delegates. `flutter test` green (9/9 engine-web VM tests),
+  `cargo test -p cairn-ffi-wasm` green (56/0), `flutter build web` green for
+  `cairn_flutter` (example), Playwright browser smoke green **2/2** (connect +
+  write + reactive snapshot; AND the new Wave 4c CRDT + writeBatch test, both in
+  a real headless Chromium against a live `cairn-server` with durable OPFS
+  storage).
 - **Date:** 2026-08-08
 - **Supersedes:** none. **Relates:** ADR-0017 (web live-only), ADR-0033 (browser-durable
   storage), ADR-0035 (wasm typed-verb surface — the shared backend), ADR-0029 (sign-out).
@@ -112,21 +116,31 @@ mode). `sqlite_wasm_glue.js` is copied verbatim from `sdk/cairn_web/worker/`
 `cairn_ffi_wasm.{js,wasm}` artifact in `web/cairn/`; `Cairn.connect(workerUrl:)`
 overrides the default `cairn/cairn_worker.js`.
 
-## Contract gaps (reported, not self-resolved)
+## CRDT + atomic writeBatch gap — CLOSED (Wave 4c)
 
 The wasm surface splits transport (`CairnSocket` — connected, ships) from the
-full typed-verb engine (`CairnEngine` — in-process, no transport). The OR-set /
-PN-counter verbs (`orSetAdd`/`orSetRemove`/`counterIncrement`/`counterDecrement`)
-live **only** on the in-process `CairnEngine`, which mints a client HLC
-(`cairn-domain`) and has no transport. `CairnSocket` exposes no CRDT verb.
+full typed-verb engine (`CairnEngine` — in-process, no transport). Wave 4b left
+the OR-set / PN-counter verbs + atomic `writeBatch` as a gap: the four CRDT
+verbs threw `UnsupportedError`, and `writeBatch` was a non-atomic loop of single
+writes. **Wave 4c closes it** by adding thin delegates on `CairnSocket`:
 
-`WebCairnEngine` therefore throws `UnsupportedError` on these four verbs (with a
-pointer to this ADR), rather than silently no-op'ing. Reaching them needs a
-small `cairn-ffi-wasm` addition (delegate the CRDT verbs on `CairnSocket`,
-mirroring how `applySchema`/`query`/`setCrdtTables` already delegate) —
-out-of-scope for 4b, deliberately left as a gap. `writeBatch` is wired as a
-best-effort loop of single writes (non-atomic — see ponytail in
-`engine_web.dart`; the ceiling is a `CairnSocket.writeBatch` delegate).
+- `orSetAdd`/`orSetRemove`/`counterIncrement`/`counterDecrement`/`writeBatch`
+  now exist on `CairnSocket`. Each delegates to the **same `CairnEngine`** the
+  socket already holds (`SocketInner.engine: Rc<RefCell<CairnEngine>>` — the
+  engine IS reachable), so the CRDT logic (HLC mint via `cairn-domain`,
+  `OrSetElement`/`counter_apply_delta`, `enqueue_batch` atomicity) is reused
+  verbatim — **no CRDT algebra is re-implemented in the wasm crate**, and
+  `CairnEngine`/native are untouched (no HLC/replica-id duplication on the
+  socket, since the engine owns that state).
+- The only addition over a bare delegate is `ship_if_open`: the engine path
+  enqueues + `apply_local`s but never sends over the wire, so the socket adds
+  the "ship now if OPEN + mark_done + reactive tick" half (mirroring
+  `CairnSocket::write`'s WS1 contract). A connected client's CRDT op ships
+  immediately instead of waiting for the next `onopen` flush.
+- The Worker (`cairn_worker.js`) gained `orSetAdd`/`orSetRemove`/
+  `counterIncrement`/`counterDecrement`/`writeBatch`/`setCrdtTables` commands;
+  `WebCairnEngine` wired the four CRDT verbs (no more `UnsupportedError`) and
+  `writeBatch` now sends the single atomic command (no looped ponytail).
 
 ## Consequences
 
@@ -134,9 +148,9 @@ best-effort loop of single writes (non-atomic — see ponytail in
   is consistent (OPFS where available, memory degrade elsewhere).
 - **+** Native path unchanged in behavior; the `RustCairnEngine` body is
   verbatim-relocated, native tests stay green.
-- **−** The four CRDT verbs throw on Flutter-web until the `CairnSocket` delegate
-  lands. Apps using CRDTs must stay native for now.
-- **−** `writeBatch` is non-atomic on web (loop of single writes).
+- **+** (Wave 4c) The full typed Tier-1 surface — including CRDT verbs + atomic
+  `writeBatch` — now works on Flutter-web, parity with native. No CRDT
+  re-implementation; the delegates reuse `CairnEngine` + `cairn-domain`.
 - **−** `frb_generated.web.dart` is still transitively compiled (dead) on web;
   a future cleanup could conditionally import the `rust/api/cairn.dart` barrel
   itself, but `ClientTableFfi` is needed on both targets, so the dead import
@@ -144,13 +158,14 @@ best-effort loop of single writes (non-atomic — see ponytail in
 
 ## Verification
 
-- `flutter test` (SDK package, native VM): 59/0.
-- `dart analyze` on all new/edited files: no issues.
-- `flutter build web`: green for `sdk/cairn_flutter/example` (cairn_flutter)
-  and `apps/atlet/flutter` (atlet — powersync 1.18 compiles on web via
-  sqlite3_web; no gating needed).
-- `WebCairnEngine` unit tests (VM, fake Worker port): 8/8.
-- **Not run in this worktree**: a real-browser Playwright smoke (needs the wasm
-  artifact rebuilt into `web/cairn/` + a running `cairn-server`). The worker +
-  engine are unit-tested against a fake port; the live browser round-trip is the
-  open verification item.
+- `flutter test` (SDK package, native VM): 9/9 on `engine_web_test.dart`
+  (includes the 3 new Wave 4c tests: atomic writeBatch, orSetAdd,
+  counterIncrement/Decrement).
+- `cargo test -p cairn-ffi-wasm` (host tests): 56/0 (the CRDT delegate logic is
+  covered by the existing `CairnEngine` typed-verb tests the delegates reuse).
+- `flutter build web`: green for `sdk/cairn_flutter/example` (cairn_flutter).
+- **Playwright browser smoke (real headless Chromium, live `cairn-server`,
+  durable OPFS storage): 2/2 green** — the original connect + write + reactive
+  snapshot test, AND the new Wave 4c test exercising counterIncrement +
+  orSetAdd + writeBatch through the real Worker/wasm/socket path. This is the
+  first time the Flutter-web browser round-trip has been run (4b deferred it).
