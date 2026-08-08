@@ -391,6 +391,7 @@ name = "cairn-ffi-wasm"
 version = "0.1.0"
 dependencies = [
  "cairn-core",
+ "cairn-domain",
  "js-sys",
  "serde",
  "serde_json",
