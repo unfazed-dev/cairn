@@ -20,7 +20,8 @@
 library;
 
 // `Cairn` is the low-level handle; `CairnDatabase` (below) is the taught surface.
-export 'src/cairn.dart' show Cairn, CairnSupabase, CairnConnectionState, CairnTableSub;
+export 'src/cairn.dart'
+    show Cairn, CairnSupabase, CairnConnectionState, CairnTableSub;
 export 'src/cairn_config.dart' show CairnConfig;
 // `Table` and `Column` are intentionally NOT re-exported at the package
 // root because they shadow Flutter's `Table`/`Column` widgets (a hard
@@ -30,7 +31,13 @@ export 'src/cairn_config.dart' show CairnConfig;
 export 'src/schema.dart' show CairnSchema, CairnTable, CairnColumn;
 export 'src/predicate.dart' show Where, Order;
 export 'src/cairn_database.dart'
-    show CairnDatabase, Collection, SyncStatus, CairnWrite, DeadLetter;
+    show
+        CairnDatabase,
+        Collection,
+        SyncStatus,
+        CairnWrite,
+        DeadLetter,
+        CairnPushTokenException;
 // T6 attachments (ADR-0034): two-plane blob sync. The metadata table syncs
 // through Cairn; the blob plane is the app's AttachmentStorageAdapter.
 export 'src/attachments.dart'
