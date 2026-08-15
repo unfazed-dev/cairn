@@ -128,6 +128,7 @@ every write is refused. This trips up everyone once.
 | `GET {CAIRN_WS_PATH}` (default `/sync`) | the WebSocket. Auth token goes on the query string as `?token=` — browsers cannot set handshake headers |
 | `GET /schema` | typed publication schema (ADR-0021). **404 unless `CAIRN_REPLICATOR=pg`** |
 | `GET /healthz` | liveness |
+| `POST /push-tokens` / `DELETE /push-tokens/{token}` | push-token registration (ADR-0037). Rails, `CAIRN_PUSH_TABLES` templates and the experimental Live Activities mode: [`push.md`](push.md) |
 
 Environment variables, from `crates/cairn-server/src/main.rs` +
 `crates/cairn-infra/src/`. The ones you will actually set:
