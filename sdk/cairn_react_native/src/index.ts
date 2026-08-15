@@ -4,12 +4,13 @@
 // NativeCairn module instance is intentionally NOT re-exported — apps drive
 // the facade; direct native-module access is for advanced / debugging paths.
 
-export { CairnClient } from "./CairnClient";
+export { CairnClient, CairnPushError } from "./CairnClient";
 export type {
   CairnClientConfig,
   Row,
   Subscription,
   WatchSubscription,
   WriteOp,
+  PushPlatform,
 } from "./CairnClient";
 export type { Spec as NativeCairnSpec } from "./NativeCairn";
