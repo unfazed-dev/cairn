@@ -38,6 +38,7 @@ cairn-domain = { workspace = true }
 cairn-application = { workspace = true }
 cairn-infra = { workspace = true }
 
+async-trait = { workspace = true }
 tokio = { workspace = true }
 tokio-tungstenite = { workspace = true }
 axum = { workspace = true }
