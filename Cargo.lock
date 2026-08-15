@@ -554,7 +554,9 @@ name = "cairn-server"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "axum",
+ "bytes",
  "cairn-application",
  "cairn-domain",
  "cairn-infra",
