@@ -774,6 +774,10 @@ static class _UniFFILib {
     
     
     
+    
+    
+    
+    
 
     static _UniFFILib() {
         _UniFFILib.uniffiCheckContractApiVersion();
@@ -803,7 +807,15 @@ static class _UniFFILib {
     );
 
     [DllImport("cairn_dotnet", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void uniffi_cairn_dotnet_fn_method_cairnclient_disconnect(IntPtr @ptr,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    [DllImport("cairn_dotnet", CallingConvention = CallingConvention.Cdecl)]
     public static extern RustBuffer uniffi_cairn_dotnet_fn_method_cairnclient_query(IntPtr @ptr,RustBuffer @sql,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    [DllImport("cairn_dotnet", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void uniffi_cairn_dotnet_fn_method_cairnclient_resume(IntPtr @ptr,ref UniffiRustCallStatus _uniffi_out_err
     );
 
     [DllImport("cairn_dotnet", CallingConvention = CallingConvention.Cdecl)]
@@ -1075,7 +1087,15 @@ static class _UniFFILib {
     );
 
     [DllImport("cairn_dotnet", CallingConvention = CallingConvention.Cdecl)]
+    public static extern ushort uniffi_cairn_dotnet_checksum_method_cairnclient_disconnect(
+    );
+
+    [DllImport("cairn_dotnet", CallingConvention = CallingConvention.Cdecl)]
     public static extern ushort uniffi_cairn_dotnet_checksum_method_cairnclient_query(
+    );
+
+    [DllImport("cairn_dotnet", CallingConvention = CallingConvention.Cdecl)]
+    public static extern ushort uniffi_cairn_dotnet_checksum_method_cairnclient_resume(
     );
 
     [DllImport("cairn_dotnet", CallingConvention = CallingConvention.Cdecl)]
@@ -1133,9 +1153,21 @@ static class _UniFFILib {
             }
         }
         {
+            var checksum = _UniFFILib.uniffi_cairn_dotnet_checksum_method_cairnclient_disconnect();
+            if (checksum != 5562) {
+                throw new UniffiContractChecksumException($"uniffi.cairn: uniffi bindings expected function `uniffi_cairn_dotnet_checksum_method_cairnclient_disconnect` checksum `5562`, library returned `{checksum}`");
+            }
+        }
+        {
             var checksum = _UniFFILib.uniffi_cairn_dotnet_checksum_method_cairnclient_query();
             if (checksum != 35331) {
                 throw new UniffiContractChecksumException($"uniffi.cairn: uniffi bindings expected function `uniffi_cairn_dotnet_checksum_method_cairnclient_query` checksum `35331`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_cairn_dotnet_checksum_method_cairnclient_resume();
+            if (checksum != 880) {
+                throw new UniffiContractChecksumException($"uniffi.cairn: uniffi bindings expected function `uniffi_cairn_dotnet_checksum_method_cairnclient_resume` checksum `880`, library returned `{checksum}`");
             }
         }
         {
@@ -1298,6 +1330,27 @@ internal interface ICairnClient {
     /// <exception cref="CairnException"></exception>
     void Connect();
     /// <summary>
+    /// Stop the live replication loop WITHOUT touching local state (ADR-0037
+    /// task 5.1) — the push-notification sleep primitive, and the direct
+    /// counterpart of `cairn_node`'s `close()`. The run loop winds down
+    /// cleanly (final flush + checkpoint ack via `SyncClient::disconnect`'s
+    /// gate), the session's durable store — rows, checkpoint, epoch, outbox —
+    /// survives intact, and `query()` / `write()` / `checkpoint()` / `watch()`
+    /// keep working offline. Contrast `sign_out()`, which WIPES that state for
+    /// the next principal (ADR-0029): disconnect is for "this app is going to
+    /// sleep", sign-out is for "this user is leaving".
+    ///
+    /// The `watch()` pumps stay ALIVE across disconnect: they are purely local
+    /// (the change broadcast + storage reads), so a backgrounded app's UI
+    /// keeps rendering, and their ticks resume the moment `resume()` reopens
+    /// the loop. Idempotent and a no-op with no active session.
+    ///
+    /// # Errors
+    /// Never errors today — `Result` mirrors the sibling lifecycle methods.
+    /// </summary>
+    /// <exception cref="CairnException"></exception>
+    void Disconnect();
+    /// <summary>
     /// Run an arbitrary `SELECT` against the on-device SQLite store and return
     /// a JSON-array-of-objects STRING (one object per row, keyed by column
     /// name) — the same shape `cairn_swift`'s, `cairn_kotlin`'s, `cairn_node`'s,
@@ -1308,6 +1361,20 @@ internal interface ICairnClient {
     /// </summary>
     /// <exception cref="CairnException"></exception>
     string Query(string @sql);
+    /// <summary>
+    /// Reopen the live replication loop after `disconnect()` (ADR-0037 task
+    /// 5.1) — the wake primitive for MAUI host-app wake scenarios: the host is
+    /// poked, calls `resume()`, and the delta past the durable checkpoint
+    /// applies (the reconnect's Subscribe re-seeds `resume_lsn` from the
+    /// checkpoint). Does NOT re-run `connect()` — the session and its store
+    /// were never torn down. Idempotent: with a live loop it is only a gate
+    /// clear (a no-op).
+    ///
+    /// # Errors
+    /// `CairnError` if no session is active (call `connect()` first).
+    /// </summary>
+    /// <exception cref="CairnException"></exception>
+    void Resume();
     /// <summary>
     /// ADR-0029 D3: swap the bearer token. Updates the stored seed (so a future
     /// `connect()` builds the `SyncClient` with the new JWT) AND — if a session
@@ -1586,6 +1653,35 @@ internal class CairnClient : ICairnClient, IDisposable {
     
     
     /// <summary>
+    /// Stop the live replication loop WITHOUT touching local state (ADR-0037
+    /// task 5.1) — the push-notification sleep primitive, and the direct
+    /// counterpart of `cairn_node`'s `close()`. The run loop winds down
+    /// cleanly (final flush + checkpoint ack via `SyncClient::disconnect`'s
+    /// gate), the session's durable store — rows, checkpoint, epoch, outbox —
+    /// survives intact, and `query()` / `write()` / `checkpoint()` / `watch()`
+    /// keep working offline. Contrast `sign_out()`, which WIPES that state for
+    /// the next principal (ADR-0029): disconnect is for "this app is going to
+    /// sleep", sign-out is for "this user is leaving".
+    ///
+    /// The `watch()` pumps stay ALIVE across disconnect: they are purely local
+    /// (the change broadcast + storage reads), so a backgrounded app's UI
+    /// keeps rendering, and their ticks resume the moment `resume()` reopens
+    /// the loop. Idempotent and a no-op with no active session.
+    ///
+    /// # Errors
+    /// Never errors today — `Result` mirrors the sibling lifecycle methods.
+    /// </summary>
+    /// <exception cref="CairnException"></exception>
+    public void Disconnect() {
+        CallWithPointer(thisPtr =>
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeCairnError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_cairn_dotnet_fn_method_cairnclient_disconnect(thisPtr,  ref _status)
+));
+    }
+    
+    
+    
+    /// <summary>
     /// Run an arbitrary `SELECT` against the on-device SQLite store and return
     /// a JSON-array-of-objects STRING (one object per row, keyed by column
     /// name) — the same shape `cairn_swift`'s, `cairn_kotlin`'s, `cairn_node`'s,
@@ -1601,6 +1697,28 @@ internal class CairnClient : ICairnClient, IDisposable {
     _UniFFILib.uniffi_cairn_dotnet_fn_method_cairnclient_query(thisPtr, FfiConverterString.INSTANCE.Lower(@sql), ref _status)
 )));
     }
+    
+    
+    /// <summary>
+    /// Reopen the live replication loop after `disconnect()` (ADR-0037 task
+    /// 5.1) — the wake primitive for MAUI host-app wake scenarios: the host is
+    /// poked, calls `resume()`, and the delta past the durable checkpoint
+    /// applies (the reconnect's Subscribe re-seeds `resume_lsn` from the
+    /// checkpoint). Does NOT re-run `connect()` — the session and its store
+    /// were never torn down. Idempotent: with a live loop it is only a gate
+    /// clear (a no-op).
+    ///
+    /// # Errors
+    /// `CairnError` if no session is active (call `connect()` first).
+    /// </summary>
+    /// <exception cref="CairnException"></exception>
+    public void Resume() {
+        CallWithPointer(thisPtr =>
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeCairnError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_cairn_dotnet_fn_method_cairnclient_resume(thisPtr,  ref _status)
+));
+    }
+    
     
     
     /// <summary>
