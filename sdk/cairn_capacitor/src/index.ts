@@ -23,7 +23,9 @@ import type { CairnPlugin } from "./definitions";
 
 export type {
   CairnConnectResult,
+  CairnForegroundPushEvent,
   CairnPlugin,
+  CairnPushTokenEvent,
   CairnRow,
   CairnWatchSnapshot,
   CairnWatchSubscription,
@@ -33,6 +35,7 @@ export type {
   SetTokenOptions,
   WatchOptions,
   WriteOptions,
+  PushPlatform,
 } from "./definitions";
 export { CairnWeb } from "./web";
 
