@@ -50,12 +50,17 @@ class CairnDatabase {
   /// `test/cairn_ws6_test.dart`. [httpBase] / [token] feed the push-token
   /// REST seam (`test/push_token_test.dart` points them at a local server).
   @visibleForTesting
-  CairnDatabase.forTest(
+  factory CairnDatabase.forTest(
     Cairn cairn,
     CairnSchema schema, {
     String? httpBase,
     String? token,
-  }) : this._(cairn, schema, httpBase ?? '', token, false);
+    Future<String?> Function()? sessionRefresh,
+  }) {
+    final db = CairnDatabase._(cairn, schema, httpBase ?? '', token, false);
+    db._sessionRefresh = sessionRefresh;
+    return db;
+  }
 
   final Cairn _cairn;
 
@@ -76,6 +81,14 @@ class CairnDatabase {
   /// to authorize its DELETEs — so any post-signOut REST call is anonymous.
   String? _seedToken;
   final bool _supabaseAuth;
+
+  /// Re-acquires credentials when a REST call is rejected with 401 (a
+  /// cold-restored Supabase session can serve an expired access token
+  /// before the auto-refresh timer rotates it). Returns the fresh
+  /// credential, or `null` when re-acquisition failed (no retry). Set for
+  /// Supabase-authed instances in [_open]; `null` disables the retry.
+  /// Injectable in tests via [forTest].
+  Future<String?> Function()? _sessionRefresh;
 
   String? get _restAuthToken => _supabaseAuth
       ? Supabase.instance.client.auth.currentSession?.accessToken
@@ -320,13 +333,23 @@ class CairnDatabase {
     );
     final resolved = schema ?? await _fetchSchema(_deriveHttpBase(url));
     cairn.applySchema(resolved.toClientTables());
-    return CairnDatabase._(
+    final db = CairnDatabase._(
       cairn,
       resolved,
       _deriveHttpBase(url),
       token,
       supabaseAuth,
     );
+    if (supabaseAuth) {
+      // REST-side credential self-healing (see [_sessionRefresh]): the WS
+      // side already rotates via _wireSupabaseTokenRefresh; this covers the
+      // push-token REST seam.
+      db._sessionRefresh = () async =>
+          (await Supabase.instance.client.auth.refreshSession())
+              .session
+              ?.accessToken;
+    }
+    return db;
   }
 
   /// Connection-state transitions for the underlying [Cairn] session.
@@ -824,20 +847,28 @@ class CairnDatabase {
   /// JSON [body] for `POST` (none for `DELETE`) and the sync JWT as a Bearer
   /// header when one exists (a `CAIRN_SYNC_AUTH=none` server has no token to
   /// send, same as the WS handshake).
+  ///
+  /// A 401 triggers ONE credential re-acquisition ([_sessionRefresh]) and a
+  /// single retry — a cold-restored Supabase session can serve an expired
+  /// access token before the auto-refresh timer rotates it, and push-token
+  /// registration must not silently strand the device (observed in the
+  /// ADR-0037 pilot: emulator registered nothing, pushes went only to the
+  /// phone). The refreshed token is re-read via [_restAuthToken], never
+  /// threaded through by hand.
   Future<void> _pushTokensRest(
     String method,
     String path, {
     String? body,
   }) async {
-    final token = _restAuthToken;
-    final uri = Uri.parse('$_httpBase$path');
-    final headers = <String, String>{
-      if (body != null) 'content-type': 'application/json',
-      if (token != null) 'authorization': 'Bearer $token',
-    };
-    final response = method == 'POST'
-        ? await _retryConn(() => http.post(uri, headers: headers, body: body))
-        : await _retryConn(() => http.delete(uri, headers: headers));
+    var response = await _restRoundTrip(method, path, body: body);
+    if (response.statusCode == 401) {
+      final refresh = _sessionRefresh;
+      final fresh = refresh == null ? null : await refresh();
+      if (fresh != null) {
+        if (!_supabaseAuth) _seedToken = fresh; // adopt on the seed path
+        response = await _restRoundTrip(method, path, body: body);
+      }
+    }
     if (response.statusCode != 204) {
       throw CairnPushTokenException(
         operation: method == 'POST' ? 'register' : 'deregister',
@@ -845,6 +876,24 @@ class CairnDatabase {
         body: response.body,
       );
     }
+  }
+
+  Future<http.Response> _restRoundTrip(
+    String method,
+    String path, {
+    String? body,
+  }) {
+    final token = _restAuthToken;
+    final uri = Uri.parse('$_httpBase$path');
+    final headers = <String, String>{
+      if (body != null) 'content-type': 'application/json',
+      if (token != null) 'authorization': 'Bearer $token',
+    };
+    return _retryConn(
+      () => method == 'POST'
+          ? http.post(uri, headers: headers, body: body)
+          : http.delete(uri, headers: headers),
+    );
   }
 
   /// Sign-out hook: best-effort DELETE of every session-registered token.
