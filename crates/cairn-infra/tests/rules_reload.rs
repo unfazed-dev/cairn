@@ -79,6 +79,7 @@ fn toggles_rules(tables: Vec<TableRule>) -> SyncRules {
         mode: cairn_domain::SyncMode::Toggles,
         tables,
         hand: Vec::new(),
+        streams: Vec::new(),
     }
 }
 
