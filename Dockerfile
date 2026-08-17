@@ -3,7 +3,8 @@
 #
 # Builds all three binaries from the workspace in a single builder stage, then
 # copies them into a slim runtime image. The `pg` feature is enabled on
-# cairn-server so the real PgReplicator ships in the image.
+# cairn-server (the real PgReplicator) and on cairn-push (the v1.1 PgStore
+# registry, selected at runtime by CAIRN_PUSHD_DATABASE_URL).
 #
 #   docker build -t cairn .
 #   docker run --rm cairn cairn-server   # default entrypoint arg
@@ -16,10 +17,12 @@ WORKDIR /cairn
 # Install needed system libs (none beyond what the base image provides for our
 # deps; rusqlite uses `bundled` sqlite, reqwest uses rustls — no system deps).
 COPY . .
-# Build both binaries with the pg feature on cairn-server. Release profile.
+# Build all three binaries; the pg feature is on for cairn-server (the
+# real PgReplicator) and cairn-push (the PgStore registry, v1.1).
+# Release profile.
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/cairn/target \
-    cargo build --release -p cairn-server --features pg -p cairn-cloud -p cairn-push && \
+    cargo build --release -p cairn-server --features pg -p cairn-cloud -p cairn-push --features pg && \
     cp target/release/cairn-server /usr/local/bin/ && \
     cp target/release/cairn-cloud  /usr/local/bin/ && \
     cp target/release/cairn-pushd  /usr/local/bin/

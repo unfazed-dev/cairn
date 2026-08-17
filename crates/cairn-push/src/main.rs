@@ -20,6 +20,9 @@ use cairn_push::config::Config;
 use cairn_push::limit::SendRateLimiter;
 use cairn_push::rail::Rails;
 use cairn_push::store::SqliteStore;
+// The v1.1 Postgres registry — only imported in `pg` builds.
+#[cfg(feature = "pg")]
+use cairn_push::store::PgStore;
 use cairn_push::{build_router, AppState};
 
 #[tokio::main]
@@ -32,19 +35,44 @@ async fn main() -> anyhow::Result<()> {
     let api_keys = ApiKeys::parse(&cfg.api_keys).context("invalid CAIRN_PUSHD_API_KEYS")?;
     info!(tenants = api_keys.len(), "API keys loaded");
 
-    let store: Arc<dyn cairn_push::store::Store> = Arc::new(
-        SqliteStore::open(&cfg.db).with_context(|| format!("opening pushd database {}", cfg.db))?,
-    );
+    // Registry store (ADR-0038 §4): Postgres when CAIRN_PUSHD_DATABASE_URL
+    // is set (v1.1, feature `pg`), the SQLite default otherwise. Either
+    // way the Arc<dyn Store> seam means zero edits below this line.
+    #[cfg(feature = "pg")]
+    let store: Arc<dyn cairn_push::store::Store> = match cfg.database_url.as_deref() {
+        Some(url) => Arc::new(
+            PgStore::open(url)
+                .await
+                .context("opening the Postgres pushd registry (CAIRN_PUSHD_DATABASE_URL)")?,
+        ),
+        None => sqlite_store(&cfg)?,
+    };
+    // The env var names a store this build cannot provide — fail fast with
+    // the fix rather than silently downgrading to SQLite.
+    #[cfg(not(feature = "pg"))]
+    let store: Arc<dyn cairn_push::store::Store> = match cfg.database_url.as_deref() {
+        Some(_) => anyhow::bail!(
+            "CAIRN_PUSHD_DATABASE_URL is set, but this cairn-pushd was built without the \
+             Postgres registry; rebuild with `--features pg` or unset it to use SQLite \
+             (CAIRN_PUSHD_DB)"
+        ),
+        None => sqlite_store(&cfg)?,
+    };
 
     // Rails configure themselves from their own env vars (plan task 1.7);
     // a misconfigured rail aborts the boot rather than failing per-send.
     let rails = Rails::from_env().context("push rail configuration")?;
     let health = rails.health();
+    // Log the registry kind, never the URL (it can carry credentials).
+    let db_desc = match cfg.database_url.as_deref() {
+        Some(_) => "postgres (CAIRN_PUSHD_DATABASE_URL)",
+        None => cfg.db.as_str(),
+    };
     info!(
         apns = health.apns,
         fcm = health.fcm,
         webpush = health.webpush,
-        db = %cfg.db,
+        db = %db_desc,
         debounce_ms = cfg.debounce_ms,
         receipt_retention_secs = cfg.receipt_retention_secs,
         "cairn-pushd starting"
@@ -84,6 +112,13 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("server error")?;
     Ok(())
+}
+
+/// The default SQLite registry (pin 0.3) — the untouched v1.0 behavior.
+fn sqlite_store(cfg: &Config) -> anyhow::Result<Arc<dyn cairn_push::store::Store>> {
+    Ok(Arc::new(SqliteStore::open(&cfg.db).with_context(|| {
+        format!("opening pushd database {}", cfg.db)
+    })?))
 }
 
 fn init_tracing() {
