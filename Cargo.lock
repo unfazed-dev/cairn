@@ -394,7 +394,11 @@ dependencies = [
  "cairn-domain",
  "cairn-infra",
  "clap",
+ "jsonwebtoken",
+ "p256",
+ "rand 0.8.6",
  "reqwest",
+ "rsa",
  "rustls",
  "serde",
  "serde_json",
@@ -547,6 +551,29 @@ dependencies = [
  "sha2 0.10.9",
  "thiserror 1.0.69",
  "time",
+]
+
+[[package]]
+name = "cairn-push"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "axum",
+ "cairn-domain",
+ "cairn-infra",
+ "clap",
+ "reqwest",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "subtle",
+ "time",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]
