@@ -560,6 +560,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "axum",
+ "cairn-application",
  "cairn-domain",
  "cairn-infra",
  "clap",
