@@ -131,6 +131,9 @@ Shipped (Wave 2, ADR-0038 §3). A cairn-server pointed at a daemon stops sending
 ```shell
 CAIRN_PUSH_REMOTE_URL=https://push.internal:8090
 CAIRN_PUSH_REMOTE_KEY=secret-word      # the SECRET only — no suffix
+# Optional: persist the receipts cursor across cairn-server restarts
+# (unset = in-memory; a restart replays the log — metrics-only skew)
+CAIRN_PUSH_REMOTE_STATE_PATH=/var/lib/cairn/push-receipts-cursor.json
 ```
 
 On the **daemon** side, the matching `CAIRN_PUSHD_API_KEYS` entry for that key MUST carry the `:rail` role suffix — delegation sends are rail-mode sends (unregistered token + `platform` field), and since the 2026-08-17 security closeout a Standard key gets `403` on them:
