@@ -50,6 +50,7 @@ members = [
     "crates/cairn-client",
     "crates/cairn-ffi-wasm",
     "crates/cairn-cli",
+    "crates/cairn-push",
 ]
 
 [workspace.package]

@@ -23,6 +23,7 @@ same-stage, same-units comparisons per docs/BENCHMARK-METHODOLOGY.md. (Week-1 ba
 | cairn-ffi-wasm | wasm-bindgen bridge over cairn-core | core |
 | cairn-bench | throughput harness — honest numbers (drops reported, env recorded) | domain, application, infra |
 | cairn-cloud | control plane: auth / Stripe / licensing (separate binary) | domain |
+| cairn-push | standalone push daemon cairn-pushd (composition root, ADR-0038) | domain, infra |
 
 `unsafe` is forbidden workspace-wide (all Cargo workspace members). The one
 exception is machine-generated FFI glue in the non-member crate
