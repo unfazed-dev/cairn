@@ -263,19 +263,15 @@ author present), which stays a launch-blocking TODO.
   --write-tables <tables>` flag at step 3 is what enables writes (the server
   allowlist defaults empty, ADR-0013); omitting it makes writes silently
   no-op, so always pass it.
-- **`Cairn` has no `close()`/`dispose()`.** Every `Cairn.connect()` appears to
-  leave its background connection running indefinitely; a real app that
-  reconnects (e.g. on auth state change, per the README's `CairnSupabase`
-  note) has no way to release the old one. Noticed while diagnosing the bug
-  above — worth its own investigation.
-- **No client-visible write-rejection signal.** A write the server rejects
-  (wrong tenant, disallowed table) has no Dart-facing error — it just stays
-  queued in the local outbox and retries forever
-  (`crates/cairn-client/src/client.rs`, the `ok:false` branch). A design
-  partner hitting a legitimate permanent rejection (e.g. a stale/misissued
-  token) would see their write silently never land, with no exception to
-  catch. Needs a dead-letter policy or a surfaced `Stream<WriteResult>`
-  before this is safe for anything beyond a showcase.
+- ~~**`Cairn` has no `close()`/`dispose()`**~~ — FIXED: `close()`, `disconnect()`, and
+  `signOut()` all exist on the SDK (`sdk/cairn_flutter/rust/src/api/cairn.rs`;
+  Dart wrappers). (Entry corrected 2026-08-17; the gap was real when
+  written.)
+- ~~**No client-visible write-rejection signal**~~ — FIXED: the dead-letter
+  policy shipped (ADR-0027/ADR-0032 T5): a permanently rejected write is
+  quarantined after `dead_letter_max_attempts` (default 50) and surfaces via
+  `deadLetters()` with the server's per-row reason — no more silent
+  retry-forever. (Entry corrected 2026-08-17.)
 - **`cairn_flutter` forces a Rust build even for pure-Dart/mock-mode
   tests.** Once it's a `pubspec.yaml` dependency, `flutter test` resolves
   native assets for the whole package graph regardless of whether the test
@@ -283,16 +279,9 @@ author present), which stays a launch-blocking TODO.
   pays a Rust compile (cargo-fallback path, since no prebuilt binary exists
   yet) the first time. Not a correctness bug, but a CI-cost and
   onboarding-friction one.
-- **`cairn init` has no `--bind`/port flag.** `cairn.toml`'s `server.bind`
-  always defaults to `0.0.0.0:8800`; running two local instances (or
-  avoiding a collision with another `cargo run -p cairn-server` on the
-  default port) means hand-editing `cairn.toml` after `init` — see
-  `fixtures/flutter/todo/tool/cairn_live_up.sh`'s `sed` step for a working
-  example.
-- **`cairn dev`'s printed Flutter snippet uses the wrong parameter names.**
-  `crates/cairn-cli/src/commands/dev.rs`'s banner prints
-  `Cairn.connect(wsUrl: ..., sessionToken: ...)`; the actual SDK API
-  (`sdk/cairn_flutter/lib/src/cairn.dart`) is `Cairn.connect(url: ...,
-  token: ...)`. Cosmetic (copy-pasting it fails loudly, an SDK IDE
-  autocomplete catches it in seconds) but worth a one-line CLI fix before
-  launch — it's the first thing a stranger would paste.
+- ~~**`cairn init` has no `--bind`/port flag**~~ — FIXED: `cairn init --bind`
+  exists (`crates/cairn-cli/src/commands/init.rs`) and is wired into the
+  generated `cairn.toml`. (Entry corrected 2026-08-17.)
+- ~~**`cairn dev`'s printed Flutter snippet uses the wrong parameter
+  names**~~ — FIXED: the banner prints `Cairn.connect(url: ..., token: ...)`,
+  matching the SDK. (Entry corrected 2026-08-17.)
