@@ -1,6 +1,10 @@
 # P5 — Sync Streams design (DRAFT)
 
-- **Status:** DRAFT — design only, no code. Closes the biggest remaining feature gap in
+- **Status:** IMPLEMENTED 2026-08-18 (ADR-0039). Slices landed on `main`: 1 domain
+  (`2b282b3`), 2 rules (`0a500b8`), 3 wire (`9328047`), 4 snapshot port+adapter
+  (`fd30612`), 5 transport (`d717beb`), 6 server (`628feb7`), 7 client (`5d3f898`),
+  8 Flutter (`7dbb687`), 9 e2e (`5b43ff7` — compiled, self-skips; live-PG run
+  blocked by Docker Desktop VM corruption on the dev machine). Closes the biggest remaining feature gap in
   the parity plan (`docs/plans/powersync-sdk-parity-plan.md:251`; table row :194; P5
   deferral :77-80).
 - **Goal:** PowerSync Sync-Streams parity — NAMED, per-client-PARAMETERIZED streams with
@@ -177,24 +181,24 @@ PG-gated e2e — `CAIRN_E2E_PG=1 CAIRN_PG_URL=... cargo test -p cairn-infra --fe
 
 ## 7. Implementation checklist
 
-- [ ] `predicate_compile.rs` (cairn-domain): `:param` placeholder tokens in literal
+- [x] `predicate_compile.rs` (cairn-domain): `:param` placeholder tokens in literal
   position; `ColumnValue::Param(String)` marker; bind step → typed leaves. §6 unit tests.
-- [ ] `rules_file.rs` (cairn-infra) + `rules.rs` (application/domain): `[streams]`
+- [x] `rules_file.rs` (cairn-infra) + `rules.rs` (application/domain): `[streams]`
   section, startup validation, checksum participation (a streams edit = rules edit →
   resnapshot, `transport.rs:873-876`).
-- [ ] `wire.rs` (cairn-infra): `SubscribeStream`/`UnsubscribeStream` variants,
+- [x] `wire.rs` (cairn-infra): `SubscribeStream`/`UnsubscribeStream` variants,
   `stream_error` encoder, optional `stream` on snapshot boundaries. Round-trip tests.
-- [ ] `ports.rs` (cairn-application): `SnapshotSource::snapshot_stream(...)`.
-- [ ] `snapshot_source.rs` (cairn-infra, `pg`): parameterized `WHERE` builder; `$n`
+- [x] `ports.rs` (cairn-application): `SnapshotSource::snapshot_stream(...)`.
+- [x] `snapshot_source.rs` (cairn-infra, `pg`): parameterized `WHERE` builder; `$n`
   binds ONLY; tenant clause appended from the principal; ident regex unchanged.
-- [ ] `transport.rs` (cairn-infra): `build_predicate` takes a pre-bound expr; mid-
+- [x] `transport.rs` (cairn-infra): `build_predicate` takes a pre-bound expr; mid-
   session routing for both new frames; per-stream session register/remove; stream
   bookkeeping on `SocketSubscriptions` (:794-801); cap accounting.
-- [ ] `main.rs` (cairn-server): load `[streams]`, plumb into `SyncRouterState`.
-- [ ] `client.rs` (cairn-client): session-task command mpsc; `sync_stream` +
+- [x] `main.rs` (cairn-server): load `[streams]`, plumb into `SyncRouterState`.
+- [x] `client.rs` (cairn-client): session-task command mpsc; `sync_stream` +
   `StreamHandle::unsubscribe`; reconnect re-subscribe.
-- [ ] `sdk/cairn_flutter` (rust/api + lib/src/cairn.dart): frb subscribe/unsubscribe;
+- [x] `sdk/cairn_flutter` (rust/api + lib/src/cairn.dart): frb subscribe/unsubscribe;
   Dart `syncStream(name, params).subscribe()`.
-- [ ] e2e: `crates/cairn-infra/tests/e2e_pg_sync_streams.rs` — §6 items 1-6.
-- [ ] Docs: ADR (next free number) recording Decisions 2-4; parity-plan P5 row flip;
+- [x] e2e: `crates/cairn-infra/tests/e2e_pg_sync_streams.rs` — §6 items 1-6.
+- [x] Docs: ADR (next free number) recording Decisions 2-4; parity-plan P5 row flip;
   ponytail comments at the JOIN ceiling and per-stream resume.
