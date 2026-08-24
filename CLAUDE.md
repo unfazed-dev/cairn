@@ -22,8 +22,9 @@ same-stage, same-units comparisons per docs/BENCHMARK-METHODOLOGY.md. (Week-1 ba
 | cairn-client | native client: SqliteStorage (rusqlite) + tokio SyncClient | core, domain, infra |
 | cairn-ffi-wasm | wasm-bindgen bridge over cairn-core | core |
 | cairn-bench | throughput harness — honest numbers (drops reported, env recorded) | domain, application, infra |
-| cairn-cloud | control plane: auth / Stripe / licensing (separate binary) | domain |
+| cairn-license | HMAC-signed offline license claims — minted by cairn-cloud, verified by cairn-server; keeps crypto deps out of domain | domain |
 | cairn-push | standalone push daemon cairn-pushd (composition root, ADR-0038) | domain, infra |
+| cairn-cli | the `cairn` CLI — rules init/edit/check, dev/doctor/deploy for a sync backend | domain, infra |
 
 `unsafe` is forbidden workspace-wide (all Cargo workspace members). The one
 exception is machine-generated FFI glue in the non-member crate
