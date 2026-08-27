@@ -22,6 +22,10 @@ library;
 // `Cairn` is the low-level handle; `CairnDatabase` (below) is the taught surface.
 export 'src/cairn.dart'
     show Cairn, CairnSupabase, CairnConnectionState, CairnTableSub;
+// The fake-able engine seam (engine.dart's library doc is written FOR test
+// doubles) — without this, barrel consumers can name Cairn.withEngine but
+// cannot implement the interface it takes.
+export 'src/engine.dart' show CairnEngine, ClientTableFfi;
 export 'src/cairn_config.dart' show CairnConfig;
 // `Table` and `Column` are intentionally NOT re-exported at the package
 // root because they shadow Flutter's `Table`/`Column` widgets (a hard

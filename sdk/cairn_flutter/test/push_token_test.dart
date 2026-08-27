@@ -18,7 +18,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cairn_flutter/cairn_flutter.dart';
-import 'package:cairn_flutter/src/engine.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Fake CairnEngine — every method is a harmless stub; only `signOut` is
