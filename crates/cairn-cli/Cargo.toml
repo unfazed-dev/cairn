@@ -16,6 +16,11 @@ path = "src/main.rs"
 [dependencies]
 cairn-domain = { workspace = true }
 cairn-infra = { workspace = true }
+# `cairn push key add/list/revoke` — the hashed-at-rest key store in the
+# cairn-pushd SQLite registry (B2, arxa integration plan). default-features
+# off: the CLI never runs the daemon or its Postgres backend.
+cairn-push = { workspace = true }
+sha2 = { workspace = true }
 clap = { workspace = true }
 tokio = { workspace = true }
 tokio-postgres = { workspace = true }
