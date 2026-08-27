@@ -30,8 +30,18 @@ class Cairn {
   /// Test-only constructor: inject a fake [CairnEngine] to exercise this
   /// class's wiring (subscribe/watch/write, table-mismatch errors, JSON
   /// decode fallback) without the native library. See `test/cairn_test.dart`.
+  /// [orSetTables] / [counterTables] mirror the [connect] declarations so a
+  /// fake-level test can prove the CRDT tiers reach `engine.subscribe`.
   @visibleForTesting
-  Cairn.withEngine(CairnEngine engine) : this._(engine);
+  Cairn.withEngine(
+    CairnEngine engine, {
+    Set<String>? orSetTables,
+    Set<String>? counterTables,
+  }) : this._(
+          engine,
+          orSetTables: orSetTables,
+          counterTables: counterTables,
+        );
 
   final CairnEngine _engine;
 
