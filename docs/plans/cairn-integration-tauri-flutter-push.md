@@ -62,3 +62,10 @@
 
 - Tracks are independent; A is priority. Each track is one agent, working in the cairn repo (A, B upstream parts, C) with a thin consume-side commit in arxa-studio per gate.
 - Nothing here blocks the mobile shell work (iroh + QR + Tauri iOS/Android); integration point is a single `@cairn/tauri` dependency + push-token registration call once Track A gate passes.
+
+## Status addendum — 2026-08-28 gap-closure session
+
+- **Track B3 token-minting seam — CLOSED** (arxa `7053c607`): `tauri-plugin-mobile-push` 0.1.4 mints APNs/FCM tokens in the Tauri mobile shell; `set_push_token` is now actually called; both mobile targets `cargo check` green (iOS at the project's 14.0 deployment floor, Android with NDK). Operator seam remaining: `google-services.json` into `gen/android/app/`, iOS Push Notifications provisioning.
+- **Engine-side `/v1/send` — EXISTS, no build needed.** cairn-side sender is `RemoteNotifier` (`crates/cairn-infra/src/push/remote.rs`), wired in `cairn-server` when `CAIRN_PUSH_REMOTE_URL` + `CAIRN_PUSH_REMOTE_KEY` are both set; delegation e2e green in `cairn-push/tests/delegation.rs`. Arxa's engine (Node sidecar) has no doorbell trigger yet by design — "a future notifications surface" (`desktop/src-tauri/src/pushd.rs:23`) riding the kit-plan review (owner decision). Rail credentials (APNs .p8 / FCM service-account JSON) go in `<app-local-data-dir>/pushd.env`; `cairn push check` validates the mint live.
+- **Track D — ADR-0041 awaits owner accept/reject.** Spike `spike/iroh-transport` green (ws/iroh conformance parity). Accept-gated items stay parked until then: cellular/relay field leg, Flutter/tauri SDK wiring, native `run_session` refactor, self-hosted relay guidance.
+- **ci gate:** main was fmt/clippy-red from earlier commits; fixed and green as of `489ef7c` (ADR-0040 regression tests `18df3a2` included).
