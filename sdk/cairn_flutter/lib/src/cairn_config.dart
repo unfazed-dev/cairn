@@ -54,9 +54,10 @@ class CairnConfig {
       );
     }
     final scheme = Uri.tryParse(url)?.scheme;
-    if (scheme != 'ws' && scheme != 'wss') {
+    if (scheme != 'ws' && scheme != 'wss' && scheme != 'iroh') {
       throw FormatException(
-        'cairn config: "url" must be a ws:// or wss:// URL, got "$url"',
+        'cairn config: "url" must be a ws://, wss://, or iroh:// URL, '
+        'got "$url"',
       );
     }
     String? supabaseUrl;
@@ -100,7 +101,11 @@ class CairnConfig {
     return CairnConfig.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   }
 
-  /// cairn-server `/sync` WebSocket URL (`ws://` or `wss://`).
+  /// cairn-server `/sync` URL — `ws://`/`wss://` (the default transport) or
+  /// an `iroh://…?ticket=…` dial URL (ADR-0041 preview: requires the native
+  /// library built with the `iroh` feature, which shipped artifacts keep OFF
+  /// until ADR-0041's field-leg condition clears; the Rust side fails loudly
+  /// if the feature is missing).
   final String url;
 
   /// Supabase project URL — set together with [supabaseAnonKey] to run
