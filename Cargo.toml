@@ -54,7 +54,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.95"
 license = "Apache-2.0"
@@ -188,15 +188,15 @@ ed25519-dalek = { version = "2", features = ["pkcs8", "rand_core"] }
 web-push = { version = "0.11", default-features = false }
 
 # internal crates (so members can reference each other via the workspace)
-cairn-domain = { path = "crates/cairn-domain", version = "0.1.0" }
-cairn-application = { path = "crates/cairn-application", version = "0.1.0" }
-cairn-infra = { path = "crates/cairn-infra", version = "0.1.0" }
-cairn-push = { path = "crates/cairn-push", version = "0.1.0", default-features = false }
-cairn-cloud = { path = "crates/cairn-cloud", version = "0.1.0" }
-cairn-license = { path = "crates/cairn-license", version = "0.1.0" }
-cairn-core = { path = "crates/cairn-core", version = "0.1.0" }
-cairn-client = { path = "crates/cairn-client", version = "0.1.0" }
-cairn-server = { path = "crates/cairn-server", version = "0.1.0" }
+cairn-domain = { path = "crates/cairn-domain", version = "0.2.0" }
+cairn-application = { path = "crates/cairn-application", version = "0.2.0" }
+cairn-infra = { path = "crates/cairn-infra", version = "0.2.0" }
+cairn-push = { path = "crates/cairn-push", version = "0.2.0", default-features = false }
+cairn-cloud = { path = "crates/cairn-cloud", version = "0.2.0" }
+cairn-license = { path = "crates/cairn-license", version = "0.2.0" }
+cairn-core = { path = "crates/cairn-core", version = "0.2.0" }
+cairn-client = { path = "crates/cairn-client", version = "0.2.0" }
+cairn-server = { path = "crates/cairn-server", version = "0.2.0" }
 
 # -----------------------------------------------------------------------------
 # Workspace-wide lints. Fail CI on the things that matter; warn on the rest.

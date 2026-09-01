@@ -439,7 +439,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-application"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "bytes",
@@ -453,7 +453,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-bench"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -477,7 +477,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "cairn-domain",
@@ -505,7 +505,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-client"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "axum",
@@ -534,7 +534,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-cloud"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "axum",
@@ -563,7 +563,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "bytes",
  "cairn-domain",
@@ -574,7 +574,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-domain"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "bytes",
  "serde",
@@ -585,7 +585,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-ffi-wasm"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "cairn-core",
  "cairn-domain",
@@ -600,7 +600,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-infra"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "axum",
@@ -638,7 +638,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-license"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "cairn-domain",
  "hex",
@@ -652,7 +652,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-push"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -677,7 +677,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-server"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
