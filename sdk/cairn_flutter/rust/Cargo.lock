@@ -387,7 +387,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-application"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "cairn-domain",
@@ -400,7 +400,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-client"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "cairn-core",
  "cairn-domain",
@@ -420,7 +420,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "cairn-domain",
  "serde",
@@ -430,7 +430,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-domain"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "bytes",
  "serde",
@@ -441,7 +441,7 @@ dependencies = [
 
 [[package]]
 name = "cairn-infra"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "axum",
@@ -459,6 +459,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
+ "subtle",
  "thiserror 1.0.69",
  "tokio",
  "tokio-tungstenite 0.23.1",
