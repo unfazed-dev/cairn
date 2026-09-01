@@ -72,7 +72,12 @@ cargo build -q -p cairn-infra --examples 2>&1 | tail -1
 echo -e "${BOLD}SDK live-E2E slices:${RESET}"
 
 want rust      && run_slice rust      "cargo test -q -p cairn-client --test e2e_live_replication -- --nocapture"
-want node      && run_slice node      "cd sdk/cairn_node && cargo build --release -q && node smoke_live.cjs"
+# The addon (cairn_node.node) is gitignored and NOT produced by `cargo build`:
+# cargo emits target/release/libcairn_node.{dylib,so}. Without the install step
+# below the slice loaded whatever stale *.node a previous manual napi build had
+# left in the tree — so it passed locally against a two-month-old binary and
+# failed in CI (fresh checkout, MODULE_NOT_FOUND) every time.
+want node      && run_slice node      "cd sdk/cairn_node && cargo build --release -q && cp \"\$(ls target/release/libcairn_node.dylib target/release/libcairn_node.so target/release/cairn_node.dll 2>/dev/null | head -1)\" cairn_node.node && node smoke_live.cjs"
 want tauri     && run_slice tauri     "cd sdk/cairn_tauri && cargo test -- --nocapture"
 want web       && run_slice web       "cd sdk/cairn_web && npx playwright test --config=playwright.config.cjs"
 want capacitor && run_slice capacitor "cd sdk/cairn_capacitor && npm install --no-audit --no-fund && npm run build && cd example-app && npm install --no-audit --no-fund && npx playwright test --config=playwright.config.cjs"
