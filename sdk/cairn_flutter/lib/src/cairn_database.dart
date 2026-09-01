@@ -426,7 +426,7 @@ class CairnDatabase {
       orSetTables: orSetTables,
       counterTables: counterTables,
     );
-    final resolved = schema ?? await _fetchSchema(deriveHttpBase(url));
+    final resolved = schema ?? await _fetchSchema(deriveHttpBase(url), token);
     cairn.applySchema(resolved.toClientTables());
     final db = CairnDatabase._(
       cairn,
@@ -1098,9 +1098,17 @@ class CairnDatabase {
     return '$scheme://${uri.host}$port$prefix';
   }
 
-  static Future<CairnSchema> _fetchSchema(String httpBase) async {
+  static Future<CairnSchema> _fetchSchema(String httpBase, String? token) async {
+    // Send the bearer token the caller already gave us. Servers running with
+    // CAIRN_PROTECT_METADATA=1 require it on GET /schema; servers without it
+    // ignore the header, so this is safe against both and needs no negotiation.
     final response = await _retryConn(
-      () => http.get(Uri.parse('$httpBase/schema')),
+      () => http.get(
+        Uri.parse('$httpBase/schema'),
+        headers: (token == null || token.isEmpty)
+            ? null
+            : {'authorization': 'Bearer $token'},
+      ),
     );
     final body = jsonDecode(response.body) as Map<String, dynamic>;
     return CairnSchema.fromSchemaDescriptor(body);
