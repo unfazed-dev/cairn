@@ -22,7 +22,7 @@ LOG="$DIR/server.log"
 echo '[d5] starting cairn-server (transport=iroh, replicator=fake)...'
 # Zero-config rules for the probe: everything syncs (the machine's ambient
 # cairn_rules.toml may be hand-mode and would reject the probe's table).
-printf 'sync_mode = "all"\n' > "$DIR/cairn_rules.toml"
+printf 'version = 1\nsync_mode = "all"\n' > "$DIR/cairn_rules.toml"
 env CAIRN_BIND="$BIND" CAIRN_REPLICATOR=fake CAIRN_RULES_FILE="$DIR/cairn_rules.toml" \
     ${CAIRN_IROH_RELAY_URL:+CAIRN_IROH_RELAY_URL="$CAIRN_IROH_RELAY_URL"} \
     cargo run -q -p cairn-server --features iroh -- --transport iroh >"$LOG" 2>&1 &
