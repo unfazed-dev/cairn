@@ -248,6 +248,9 @@ silently read as `true`).
 >   `cairn pull --token <TOKEN>` (env fallback `CAIRN_TOKEN`) sends
 >   `Authorization: Bearer <token>` on `GET /schema`; the 401 message names the
 >   flag and the env var. Still no token field in `.cairn/config.json`.
+>   `--token` beats `CAIRN_TOKEN`, the value is redacted in `Debug`/`Display`,
+>   and it is only sent over `https://` or to loopback — plain `http://` to a
+>   non-loopback host needs `--allow-insecure-token`.
 > - **CORS is unchanged.** `build_cors_layer` still returns
 >   `CorsLayer::permissive()` on empty `CAIRN_CORS_ORIGINS` — the documented
 >   local-dev default, with `CAIRN_CORS_ORIGINS` as the existing production
