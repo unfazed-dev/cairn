@@ -24,8 +24,8 @@
 #             non-zero = see $HARNESS_LOG / $SPINE_LOG / $GRADLE_LOG.
 set -euo pipefail
 
-CAIRN_RN="/Volumes/developer_ssd/Developer/cairn/sdk/cairn_react_native"
-REPO_ROOT="/Volumes/developer_ssd/Developer/cairn"
+REPO_ROOT="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)"
+CAIRN_RN="$REPO_ROOT/sdk/cairn_react_native"
 cd "$CAIRN_RN"
 
 AVD="${CAIRN_AVD:-cairn_api34}"

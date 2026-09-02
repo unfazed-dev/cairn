@@ -28,8 +28,8 @@
 
 set -euo pipefail
 
-ROOT="/Volumes/developer_ssd/Developer/cairn/sdk/cairn_kotlin"
-REPO_ROOT="/Volumes/developer_ssd/Developer/cairn"
+REPO_ROOT="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)"
+ROOT="$REPO_ROOT/sdk/cairn_kotlin"
 cd "$ROOT"
 
 AVD="${CAIRN_AVD:-cairn_api34}"

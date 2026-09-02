@@ -15,9 +15,9 @@
 # Exit codes: 0 = .so + Kotlin sources in place; non-zero = cargo/bindgen failed.
 set -euo pipefail
 
-CAIRN_RN="/Volumes/developer_ssd/Developer/cairn/sdk/cairn_react_native"
-CAIRN_KT="/Volumes/developer_ssd/Developer/cairn/sdk/cairn_kotlin"
-REPO_ROOT="/Volumes/developer_ssd/Developer/cairn"
+REPO_ROOT="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)"
+CAIRN_RN="$REPO_ROOT/sdk/cairn_react_native"
+CAIRN_KT="$REPO_ROOT/sdk/cairn_kotlin"
 
 NDK_VERSION="${CAIRN_NDK_VERSION:-28.2.13676358}"
 NDK="$HOME/Library/Android/sdk/ndk/$NDK_VERSION"
