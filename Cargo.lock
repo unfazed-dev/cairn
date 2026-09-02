@@ -444,6 +444,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "cairn-domain",
+ "futures-util",
  "serde",
  "thiserror 1.0.69",
  "tokio",
