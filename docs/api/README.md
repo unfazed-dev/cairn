@@ -27,7 +27,7 @@ page cites the file it came from so you can check it yourself.
 | Node (native) | [`node.md`](node.md) | `@cairn/node` | ✅ | **SQL** over SQLite |
 | React Native | [`react-native.md`](react-native.md) | `@cairn/react-native` | ✅ (Android) | **SQL** over SQLite |
 | Capacitor | [`capacitor.md`](capacitor.md) | `@cairn/capacitor` | ✅ | KV via WASM engine |
-| Tauri | [`tauri.md`](tauri.md) | `cairn-tauri` | ✅ | **SQL** over SQLite |
+| Tauri | [`tauri.md`](tauri.md) | `tauri-plugin-cairn` | ✅ | **SQL** over SQLite |
 | Kotlin / Android | [`kotlin.md`](kotlin.md) | UniFFI `.so` + bindings | ✅ | **SQL** over SQLite |
 | Swift / iOS | [`swift.md`](swift.md) | UniFFI `.xcframework` | ✅ | **SQL** over SQLite |
 | .NET / MAUI | [`dotnet.md`](dotnet.md) | `Cairn.DotNet` | ✅ | **SQL** over SQLite |

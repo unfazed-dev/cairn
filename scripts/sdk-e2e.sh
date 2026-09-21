@@ -78,7 +78,7 @@ want rust      && run_slice rust      "cargo test -q -p cairn-client --test e2e_
 # left in the tree — so it passed locally against a two-month-old binary and
 # failed in CI (fresh checkout, MODULE_NOT_FOUND) every time.
 want node      && run_slice node      "cd sdk/cairn_node && cargo build --release -q && cp \"\$(ls target/release/libcairn_node.dylib target/release/libcairn_node.so target/release/cairn_node.dll 2>/dev/null | head -1)\" cairn_node.node && node smoke_live.cjs"
-want tauri     && run_slice tauri     "cd sdk/cairn_tauri && cargo test -- --nocapture"
+want tauri     && run_slice tauri     "cd sdk/cairn_tauri && cargo test -- --nocapture && cd fixture && cargo test -- --nocapture"
 want web       && run_slice web       "cd sdk/cairn_web && npx playwright test --config=playwright.config.cjs"
 want capacitor && run_slice capacitor "cd sdk/cairn_capacitor && npm install --no-audit --no-fund && npm run build && cd example-app && npm install --no-audit --no-fund && npx playwright test --config=playwright.config.cjs"
 # dotnet — C# binding live-E2E against the shared spine (PUSH+ECHO). Loads the
