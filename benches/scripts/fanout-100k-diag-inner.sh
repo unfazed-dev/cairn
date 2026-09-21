@@ -10,8 +10,12 @@ BIN=/target/bin-$TAG/cairn-bench-10k
 case "$1" in
 build)
   echo "BUILD start $(date +%T) tag=$TAG"
-  cargo build --release --locked -p cairn-bench --bin cairn-bench-10k 2>&1 | tail -3 \
-    || { echo BUILD_FAILED; exit 91; }
+  # The build log goes to a file, not a pipe: `cargo ... | tail -3 || ...` tests
+  # tail's status, so a failed build fell through to the cp below and reported a
+  # bogus exit 92 (caught 2026-09-21 when the workspace moved to rustc 1.98).
+  cargo build --release --locked -p cairn-bench --bin cairn-bench-10k >/tmp/cairn-build.log 2>&1 \
+    || { tail -20 /tmp/cairn-build.log; echo BUILD_FAILED; exit 91; }
+  tail -3 /tmp/cairn-build.log
   mkdir -p "$(dirname "$BIN")" && cp /target/release/cairn-bench-10k "$BIN" || exit 92
   echo "BUILD ok $(date +%T)"
   ;;
