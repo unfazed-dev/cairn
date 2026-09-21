@@ -50,8 +50,10 @@ export 'worker_port.dart' show CairnWorkerPort, FakeCairnWorkerPort;
 
 /// The storage backend the Worker reported active (ADR-0033). Surfaced on
 /// `SyncStatus` so the UI can show "degraded" when OPFS is unavailable
-/// (Safari Private Browsing) and the Worker fell back to memory.
-enum CairnWebStorageMode { durable, memory, unknown }
+/// (Safari Private Browsing) and the Worker fell back to memory, or when
+/// another tab of the same origin already owns the OPFS store
+/// ([secondaryTab] — the Worker refuses `connect` in that state).
+enum CairnWebStorageMode { durable, memory, secondaryTab, unknown }
 
 /// Flutter-web [CairnEngine] over a cairn Worker ([CairnWorkerPort]).
 class WebCairnEngine implements CairnEngine {
@@ -122,9 +124,15 @@ class WebCairnEngine implements CairnEngine {
   Stream<CairnWebStorageMode> get storageModeStream =>
       _storageController.stream;
 
+  /// Whether the browser granted this origin persistent (non-evictable)
+  /// storage, as last reported by the Worker. `null` until the storage push
+  /// arrives or when the browser has no StorageManager.
+  bool? get storagePersisted => _storagePersisted;
+  bool? _storagePersisted;
+
   @override
   Stream<bool> get webStorageDegraded =>
-      storageModeStream.map((m) => m == CairnWebStorageMode.memory);
+      storageModeStream.map((m) => m != CairnWebStorageMode.durable);
 
   // --------------------------------------------------------------------------
   // CairnEngine contract
@@ -381,10 +389,14 @@ class WebCairnEngine implements CairnEngine {
             lastError: msg['lastError'] as String?,
           ));
         case 'storage':
-          final mode = msg['mode'] == 'durable'
-              ? CairnWebStorageMode.durable
-              : CairnWebStorageMode.memory;
+          final mode = switch (msg['mode']) {
+            'durable' => CairnWebStorageMode.durable,
+            _ when msg['reason'] == 'secondary-tab' =>
+              CairnWebStorageMode.secondaryTab,
+            _ => CairnWebStorageMode.memory,
+          };
           _storageMode = mode;
+          _storagePersisted = msg['persisted'] as bool?;
           _storageController.add(mode);
       }
       return;
