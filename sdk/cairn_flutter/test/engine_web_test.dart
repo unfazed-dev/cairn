@@ -42,28 +42,25 @@ void main() {
     },
   );
 
-  test(
-    'subscribe threads CRDT tables into the connect command (T4 config surface)',
-    () async {
-      final port = FakeCairnWorkerPort();
-      final eng = _engine(port);
-      eng.subscribe(
-        tables: const [CairnTableSub(name: 'tasks')],
-        orSetTables: const {'tags'},
-        counterTables: const {'likes'},
-      );
-      await Future<void>.delayed(Duration.zero);
+  test('subscribe threads CRDT tables into the connect command (T4 config surface)', () async {
+    final port = FakeCairnWorkerPort();
+    final eng = _engine(port);
+    eng.subscribe(
+      tables: const [CairnTableSub(name: 'tasks')],
+      orSetTables: const {'tags'},
+      counterTables: const {'likes'},
+    );
+    await Future<void>.delayed(Duration.zero);
 
-      // The connect cmd must carry the CRDT-table tags so the Worker re-tags on
-      // every (re)connect (cairn_worker.js openSocket → setCrdtTables). Without
-      // this, orSet/counter verbs throw *TableNotTagged on web.
-      final req = port.sent.single;
-      expect(req['cmd'], 'connect');
-      expect(req['orSetTables'], ['tags']);
-      expect(req['counterTables'], ['likes']);
-      await eng.close();
-    },
-  );
+    // The connect cmd must carry the CRDT-table tags so the Worker re-tags on
+    // every (re)connect (cairn_worker.js openSocket → setCrdtTables). Without
+    // this, orSet/counter verbs throw *TableNotTagged on web.
+    final req = port.sent.single;
+    expect(req['cmd'], 'connect');
+    expect(req['orSetTables'], ['tags']);
+    expect(req['counterTables'], ['likes']);
+    await eng.close();
+  });
 
   test(
     'storage push maps mode+reason to CairnWebStorageMode and persisted',
@@ -89,7 +86,11 @@ void main() {
       expect(eng.storageMode, CairnWebStorageMode.secondaryTab);
 
       // Plain OPFS degrade (Safari Private Browsing) stays `memory`.
-      port.reply({'type': 'storage', 'mode': 'memory', 'reason': 'opfs-unavailable'});
+      port.reply({
+        'type': 'storage',
+        'mode': 'memory',
+        'reason': 'opfs-unavailable',
+      });
       await Future<void>.delayed(Duration.zero);
       expect(eng.storageMode, CairnWebStorageMode.memory);
       expect(eng.storagePersisted, isNull);

@@ -73,7 +73,6 @@ class _AttachFakeEngine implements CairnEngine {
   }
 
   @override
-
   @override
   Future<String> subscribeStream({
     required String name,

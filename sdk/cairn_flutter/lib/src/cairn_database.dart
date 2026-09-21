@@ -282,7 +282,10 @@ class CairnDatabase {
   /// declared schema, subscribe every declared table (so `watch` / `getAll` /
   /// `write` membership holds exactly as after a synced open), then pause the
   /// sync loop before it can dial.
-  static Future<CairnDatabase> _openLocal(Cairn cairn, CairnSchema schema) async {
+  static Future<CairnDatabase> _openLocal(
+    Cairn cairn,
+    CairnSchema schema,
+  ) async {
     if (schema.tables.isEmpty) {
       throw ArgumentError.value(
         schema.tables,
@@ -303,7 +306,6 @@ class CairnDatabase {
     await db.pauseSync();
     return db;
   }
-
 
   /// Open a [Cairn] connection for a Supabase-authenticated app.
   ///
@@ -1098,7 +1100,10 @@ class CairnDatabase {
     return '$scheme://${uri.host}$port$prefix';
   }
 
-  static Future<CairnSchema> _fetchSchema(String httpBase, String? token) async {
+  static Future<CairnSchema> _fetchSchema(
+    String httpBase,
+    String? token,
+  ) async {
     // Send the bearer token the caller already gave us. Servers running with
     // CAIRN_PROTECT_METADATA=1 require it on GET /schema; servers without it
     // ignore the header, so this is safe against both and needs no negotiation.
@@ -1122,7 +1127,7 @@ class CairnDatabase {
   /// server-side, so replaying a lost POST is safe.
   static Future<T> _retryConn<T>(Future<T> Function() fn) async {
     const attempts = 10;
-    for (var i = 1;; i++) {
+    for (var i = 1; ; i++) {
       try {
         return await fn();
       } on http.ClientException {

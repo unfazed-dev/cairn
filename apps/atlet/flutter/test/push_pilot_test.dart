@@ -18,7 +18,9 @@ void main() {
     test('rejects null and non-doorbell messages', () {
       expect(isCairnDoorbell(null), isFalse);
       expect(
-        isCairnDoorbell({'notification': {'title': 'sale'}}),
+        isCairnDoorbell({
+          'notification': {'title': 'sale'},
+        }),
         isFalse,
       );
     });

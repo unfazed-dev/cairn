@@ -6,4 +6,7 @@ library;
 import '../../adapters/cairn_adapter.dart';
 
 /// No-op: Web Push does not exist off the browser.
-Future<void> attachWebPush(CairnAdapter adapter, void Function(String) log) async {}
+Future<void> attachWebPush(
+  CairnAdapter adapter,
+  void Function(String) log,
+) async {}

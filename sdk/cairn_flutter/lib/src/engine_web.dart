@@ -198,10 +198,11 @@ class WebCairnEngine implements CairnEngine {
   );
 
   @override
-  Future<void> unsubscribeStream({required String id}) => throw UnimplementedError(
-    'sync streams are native-only in v1 (P5 §4: the web/WASM client has no '
-    'mid-session subscribe channel yet)',
-  );
+  Future<void> unsubscribeStream({required String id}) =>
+      throw UnimplementedError(
+        'sync streams are native-only in v1 (P5 §4: the web/WASM client has no '
+        'mid-session subscribe channel yet)',
+      );
 
   @override
   Future<int> write({
@@ -431,9 +432,8 @@ class WebCairnEngine implements CairnEngine {
     if (_closed) return;
     _closed = true;
     try {
-      await _request({
-        'cmd': cmd,
-      }).timeout(const Duration(seconds: 2), onTimeout: () => {});
+      await _request({'cmd': cmd})
+          .timeout(const Duration(seconds: 2), onTimeout: () => {});
     } catch (_) {
       // Best-effort: the Worker may already be gone.
     }

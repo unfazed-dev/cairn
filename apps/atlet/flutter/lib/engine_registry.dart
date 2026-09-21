@@ -37,8 +37,8 @@ class EngineRegistry {
   EngineRegistry({
     SyncAdapter Function()? cairnFactory,
     SyncAdapter Function()? powerSyncFactory,
-  })  : _cairnFactory = cairnFactory ?? (() => CairnAdapter()),
-        _powerSyncFactory = powerSyncFactory ?? (() => PowerSyncAdapter());
+  }) : _cairnFactory = cairnFactory ?? (() => CairnAdapter()),
+       _powerSyncFactory = powerSyncFactory ?? (() => PowerSyncAdapter());
 
   final SyncAdapter Function() _cairnFactory;
   final SyncAdapter Function() _powerSyncFactory;
@@ -56,15 +56,18 @@ class EngineRegistry {
   Engine? get activeEngine => _activeEngine;
 
   SyncAdapter? get current => switch (_activeEngine) {
-        Engine.cairn => _cairnAdapter,
-        Engine.powersync => _powerSyncAdapter,
-        null => null,
-      };
+    Engine.cairn => _cairnAdapter,
+    Engine.powersync => _powerSyncAdapter,
+    null => null,
+  };
 
   /// Debug/test hook: the adapters currently held live. Should always have
   /// length 0 or 1 — see [_assertInvariant], which is the enforcement point;
   /// this getter just makes that invariant observable from tests.
-  List<SyncAdapter> get debugLiveAdapters => [?_cairnAdapter, ?_powerSyncAdapter];
+  List<SyncAdapter> get debugLiveAdapters => [
+    ?_cairnAdapter,
+    ?_powerSyncAdapter,
+  ];
 
   /// Brings up [engine] cold: no prior adapter is torn down first. Throws
   /// [StateError] if an adapter is already live — callers that may already
@@ -76,8 +79,9 @@ class EngineRegistry {
         'already live — call switchTo() to wipe and swap instead',
       );
     }
-    final adapter =
-        engine == Engine.cairn ? _cairnFactory() : _powerSyncFactory();
+    final adapter = engine == Engine.cairn
+        ? _cairnFactory()
+        : _powerSyncFactory();
     _setSlot(engine, adapter);
     await adapter.init(
       supabaseUrl: session.supabaseUrl,
@@ -115,7 +119,10 @@ class EngineRegistry {
     }
   }
 
-  Future<SyncAdapter> _switchToLocked(Engine target, SyncSession session) async {
+  Future<SyncAdapter> _switchToLocked(
+    Engine target,
+    SyncSession session,
+  ) async {
     if (_activeEngine == target) {
       return current!;
     }
