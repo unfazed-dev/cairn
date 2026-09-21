@@ -21,7 +21,7 @@
 
 [package]
 name = "cairn-kotlin"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 publish = false
 description = "UniFFI bridge exposing cairn-client's SyncClient<SqliteStorage> to Kotlin (Android) — feasibility scaffold."

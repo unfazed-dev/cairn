@@ -40,7 +40,7 @@
     <RootNamespace>Cairn</RootNamespace>
     <AssemblyName>Cairn.DotNet</AssemblyName>
     <PackageId>Cairn.DotNet</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Description>UniFFI bridge exposing cairn-client's SyncClient&lt;SqliteStorage&gt; to .NET via Nord UniFFI-CS — feasibility scaffold.</Description>
     <Authors>unfazed-dev</Authors>
     <Company>unfazed-dev</Company>

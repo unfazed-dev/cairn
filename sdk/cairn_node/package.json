@@ -1,6 +1,6 @@
 {
   "name": "@cairn/node",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "napi-rs scaffold exposing cairn-client SyncClient<SqliteStorage> to Node.js (feasibility proof, not a polished SDK)",
   "main": "cairn_node.node",
   "scripts": {
@@ -25,5 +25,6 @@
   "homepage": "https://github.com/unfazed-dev/cairn",
   "bugs": {
     "url": "https://github.com/unfazed-dev/cairn/issues"
-  }
+  },
+  "private": true
 }
