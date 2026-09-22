@@ -9,6 +9,12 @@ description = "Cairn client sync core — the platform-agnostic apply engine (pu
 repository.workspace = true
 homepage.workspace = true
 
+[features]
+# The cross-platform conformance suite. Off by default so the cases never ship
+# in a device binary; `cairn-client` (and, once the bridge exposes it,
+# `cairn-ffi-wasm`) turn it on as a dev-dependency.
+conformance = []
+
 [dependencies]
 cairn-domain = { workspace = true }
 serde = { workspace = true }
