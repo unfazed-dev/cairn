@@ -592,6 +592,7 @@ version = "0.2.0"
 dependencies = [
  "cairn-core",
  "cairn-domain",
+ "console_error_panic_hook",
  "js-sys",
  "serde",
  "serde_json",
