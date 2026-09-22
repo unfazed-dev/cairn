@@ -197,21 +197,40 @@ modes, not the less.**
 
 It reuses the platform split that already exists:
 
-| SDKs | host | pull + doorbell I/O | storage (unchanged) |
+| SDKs | how it reaches Rust | pull + doorbell I/O | storage (unchanged) |
 |---|---|---|---|
-| `cairn_flutter` (native), `cairn_tauri`, `cairn_node`, `cairn_capacitor`, `cairn_react_native`, `cairn_swift`, `cairn_kotlin`, `cairn_dotnet` | native Rust via `cairn-client` | tokio HTTP + WS | `SqliteStorage` (rusqlite) |
-| `cairn_web`, `cairn_flutter` on web (ADR-0036) | wasm inside the Worker | JS `fetch` + `WebSocket`, driven from `cairn-ffi-wasm` | `SqliteWasmStorage` → sqlite-wasm `opfs-sahpool` (ADR-0033) |
+| `cairn_flutter` (native), `cairn_tauri`, `cairn_node`, `cairn_swift`, `cairn_kotlin`, `cairn_dotnet` | `cairn-client` directly (each has its own `Cargo.toml`) | tokio HTTP + WS | `SqliteStorage` (rusqlite) |
+| `cairn_react_native` | TurboModule over the `cairn_swift` / `cairn_kotlin` UniFFI bindings — **no Rust crate of its own** (ADR-0020) | inherited from those two | inherited |
+| `cairn_web`, `cairn_capacitor`, `cairn_flutter` on web (ADR-0036) | `cairn-ffi-wasm` `--target web`, inside the Worker | JS `fetch` + `WebSocket` | `SqliteWasmStorage` → sqlite-wasm `opfs-sahpool` (ADR-0033) |
 
-`cairn_tauri` takes the **native** row despite rendering a web UI:
-`sdk/cairn_tauri/Cargo.toml` depends on `cairn-client`, `cairn-core` and
-`cairn-domain`, so the webview never touches the sync path.
+Two placements are counter-intuitive and both were checked rather than guessed:
+
+- **`cairn_tauri` is native** despite rendering a web UI —
+  `sdk/cairn_tauri/Cargo.toml` depends on `cairn-client`, `cairn-core` and
+  `cairn-domain`, so the webview never touches the sync path.
+- **`cairn_capacitor` is *not* native.** It has no Cargo.toml;
+  `sdk/cairn_capacitor/src/web.ts` loads `pkg-web/cairn_ffi_wasm.js` and drives
+  `CairnSocket` inside the WKWebView / Android WebView, on the grounds that both
+  browser globals "exist and behave exactly as in a desktop browser". So a
+  Capacitor app is a browser target for sync purposes, and direct mode reaches
+  it through the wasm row.
+
+The practical consequence: **direct mode needs two implementations, not nine.**
+`cairn-client` covers six SDKs and `cairn-ffi-wasm` covers three.
 
 ### This is what moves the seam out of `cairn-client`
 
-`cairn-client` is tokio + rusqlite. A seam there ships direct mode to eight
-SDKs and skips the two that want it most. The pull logic belongs in
-**`cairn-core`**, which is WASM-clean — and verified so: no `async fn` and no
-`.await` anywhere in `crates/cairn-core/src/`.
+`cairn-client` is tokio + rusqlite. A seam there covers six SDKs and skips the
+three that want it most. The pull logic belongs in **`cairn-core`**, whose own
+header states the contract — "**pure Rust: no tokio, no SQLite, no I/O**"
+(`crates/cairn-core/src/lib.rs:9`) — and which holds to it: the only matches for
+`async fn`, `.await` or `tokio` in `crates/cairn-core/src/` are four doc
+comments asserting their own absence.
+
+ADR-0020 is the reason this matters rather than being a tidiness preference. It
+settled that React Native **cannot** reuse the JS core, so `cairn-client` and
+`cairn-ffi-wasm` are permanently two separate consumers. Logic placed in either
+one does not reach the other; logic placed in `cairn-core` reaches both.
 
 This is not a new pattern. `crates/cairn-ffi-wasm/src/transport.rs` already
 splits it exactly this way: the frame logic is pure Rust
