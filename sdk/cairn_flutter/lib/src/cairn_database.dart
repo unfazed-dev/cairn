@@ -10,7 +10,7 @@ import 'cairn_config.dart';
 import 'predicate.dart';
 import 'schema.dart';
 
-/// PowerSync-style entry point: open a [Cairn] sync connection AND resolve
+/// A single entry point: open a [Cairn] sync connection AND resolve
 /// the server schema in one call, so `SELECT * FROM <table>` works
 /// immediately against the WS2 read-views (see `SqliteStorage::apply_schema`
 /// — the views persist in the SQLite file once [applySchema] runs).
@@ -408,6 +408,52 @@ class CairnDatabase {
     });
   }
 
+  /// Open a database with no `cairn-server` in it: this device syncs straight
+  /// with your Supabase project (ADR-0045). See [Cairn.direct] for the mode's
+  /// shape; everything else on this class behaves as it does after [connect].
+  ///
+  /// [schema] is REQUIRED and cannot be fetched: `GET /schema` is a
+  /// `cairn-server` endpoint, and there is no server. Declare it in the app —
+  /// re-applying it at every open IS the migration mechanism.
+  ///
+  /// [scope] is the change-log scope and the private Realtime channel this
+  /// device may join (`sub:<user-uuid>`).
+  ///
+  /// ponytail: the push-token REST seam ([registerPushToken]) points at a
+  /// `cairn-server` base that does not exist here, so it fails rather than
+  /// registering. Direct mode's equivalent already exists one layer down
+  /// (`PostgrestSource::register_push_token` → `cairn_register_push_token`);
+  /// wiring it up means threading that RPC through this class, which the
+  /// pilot does not need yet.
+  static Future<CairnDatabase> direct({
+    required String supabaseUrl,
+    required String anonKey,
+    required String scope,
+    String? token,
+    required CairnSchema schema,
+    required String sqlitePath,
+    Map<String, String> counterFields = const <String, String>{},
+  }) async {
+    if (schema.tables.isEmpty) {
+      throw ArgumentError.value(
+        schema.tables,
+        'schema.tables',
+        'CairnDatabase.direct requires a declared schema with at least one '
+            'table — there is no server to fetch one from',
+      );
+    }
+    final cairn = await Cairn.direct(
+      supabaseUrl: supabaseUrl,
+      anonKey: anonKey,
+      scope: scope,
+      token: token,
+      sqlitePath: sqlitePath,
+      counterFields: counterFields,
+    );
+    cairn.applySchema(schema.toClientTables());
+    return CairnDatabase._(cairn, schema, '', token, false);
+  }
+
   /// Shared open path for [connect] and [supabase]: open the [Cairn]
   /// connection, resolve the schema (passed or fetched), and apply it.
   /// Both factories delegate here so the connect/apply sequence has one
@@ -785,6 +831,18 @@ class CairnDatabase {
       );
     }, onError: (Object _) {});
   }
+
+  /// Replace the bearer token the engine syncs with, mid-session.
+  ///
+  /// [CairnDatabase.supabase] rotates this for you. [CairnDatabase.direct] and
+  /// [CairnDatabase.connect] are handed a token once, so THEIR callers must
+  /// forward `onAuthStateChange`'s `tokenRefreshed` here — a Supabase JWT
+  /// expires in about an hour, and direct mode's doorbell treats an auth
+  /// failure as fatal and ends its loop, which leaves the device silently
+  /// unsynced for the rest of the session.
+  ///
+  /// Tears nothing down; see [Cairn.setToken].
+  Future<void> setToken(String? token) => _cairn.setToken(token);
 
   /// Tear down the underlying [Cairn] session (sync loop + watch pump) AND the
   /// status listener. Safe to call with no subscription; idempotent.

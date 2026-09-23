@@ -409,6 +409,7 @@ dependencies = [
  "futures-util",
  "iroh",
  "iroh-tickets",
+ "reqwest 0.12.28",
  "rusqlite",
  "serde",
  "serde_json",

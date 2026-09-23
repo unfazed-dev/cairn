@@ -4,6 +4,7 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/cairn.dart';
+import 'api/direct.dart';
 
 import 'dart:async';
 import 'dart:convert';
@@ -69,7 +70,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 431468753;
+  int get rustContentHash => 32333151;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -81,6 +82,83 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  void crateApiDirectCairnDirectHandleApplySchema({
+    required CairnDirectHandle that,
+    required List<ClientTableFfi> tables,
+  });
+
+  Future<void> crateApiDirectCairnDirectHandleClose({
+    required CairnDirectHandle that,
+  });
+
+  CairnDirectHandle crateApiDirectCairnDirectHandleConnect({
+    required String supabaseUrl,
+    required String anonKey,
+    String? token,
+    required String dbPath,
+  });
+
+  Future<void> crateApiDirectCairnDirectHandleDisconnect({
+    required CairnDirectHandle that,
+  });
+
+  Future<BigInt> crateApiDirectCairnDirectHandleIncrement({
+    required CairnDirectHandle that,
+    required String table,
+    required String pk,
+    required String field,
+    required double delta,
+  });
+
+  Future<String> crateApiDirectCairnDirectHandleQuery({
+    required CairnDirectHandle that,
+    required String sql,
+  });
+
+  Stream<CairnConnectionState> crateApiDirectCairnDirectHandleResume({
+    required CairnDirectHandle that,
+  });
+
+  Future<void> crateApiDirectCairnDirectHandleSetToken({
+    required CairnDirectHandle that,
+    String? token,
+  });
+
+  Future<void> crateApiDirectCairnDirectHandleSignOut({
+    required CairnDirectHandle that,
+  });
+
+  Stream<CairnConnectionState> crateApiDirectCairnDirectHandleStart({
+    required CairnDirectHandle that,
+    required String scope,
+  });
+
+  Future<BigInt> crateApiDirectCairnDirectHandleSyncNow({
+    required CairnDirectHandle that,
+  });
+
+  Stream<String> crateApiDirectCairnDirectHandleWatch({
+    required CairnDirectHandle that,
+    required String table,
+  });
+
+  Stream<WriteQueueStatusFfi> crateApiDirectCairnDirectHandleWatchWriteStatus({
+    required CairnDirectHandle that,
+  });
+
+  Future<BigInt> crateApiDirectCairnDirectHandleWrite({
+    required CairnDirectHandle that,
+    required String table,
+    required String op,
+    required String pk,
+    String? payloadJson,
+  });
+
+  Future<Uint64List> crateApiDirectCairnDirectHandleWriteBatch({
+    required CairnDirectHandle that,
+    required List<CairnWriteInput> ops,
+  });
+
   void crateApiCairnCairnHandleApplySchema({
     required CairnHandle that,
     required List<ClientTableFfi> tables,
@@ -183,6 +261,15 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiCairnInitApp();
 
   RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_CairnDirectHandle;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_CairnDirectHandle;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_CairnDirectHandlePtr;
+
+  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_CairnHandle;
 
   RustArcDecrementStrongCountFnType
@@ -200,6 +287,597 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
+  void crateApiDirectCairnDirectHandleApplySchema({
+    required CairnDirectHandle that,
+    required List<ClientTableFfi> tables,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+            that,
+            serializer,
+          );
+          sse_encode_list_client_table_ffi(tables, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiDirectCairnDirectHandleApplySchemaConstMeta,
+        argValues: [that, tables],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDirectCairnDirectHandleApplySchemaConstMeta =>
+      const TaskConstMeta(
+        debugName: "CairnDirectHandle_apply_schema",
+        argNames: ["that", "tables"],
+      );
+
+  @override
+  Future<void> crateApiDirectCairnDirectHandleClose({
+    required CairnDirectHandle that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+            that,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 2,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiDirectCairnDirectHandleCloseConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDirectCairnDirectHandleCloseConstMeta =>
+      const TaskConstMeta(
+        debugName: "CairnDirectHandle_close",
+        argNames: ["that"],
+      );
+
+  @override
+  CairnDirectHandle crateApiDirectCairnDirectHandleConnect({
+    required String supabaseUrl,
+    required String anonKey,
+    String? token,
+    required String dbPath,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(supabaseUrl, serializer);
+          sse_encode_String(anonKey, serializer);
+          sse_encode_opt_String(token, serializer);
+          sse_encode_String(dbPath, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiDirectCairnDirectHandleConnectConstMeta,
+        argValues: [supabaseUrl, anonKey, token, dbPath],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDirectCairnDirectHandleConnectConstMeta =>
+      const TaskConstMeta(
+        debugName: "CairnDirectHandle_connect",
+        argNames: ["supabaseUrl", "anonKey", "token", "dbPath"],
+      );
+
+  @override
+  Future<void> crateApiDirectCairnDirectHandleDisconnect({
+    required CairnDirectHandle that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+            that,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 4,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiDirectCairnDirectHandleDisconnectConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDirectCairnDirectHandleDisconnectConstMeta =>
+      const TaskConstMeta(
+        debugName: "CairnDirectHandle_disconnect",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<BigInt> crateApiDirectCairnDirectHandleIncrement({
+    required CairnDirectHandle that,
+    required String table,
+    required String pk,
+    required String field,
+    required double delta,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+            that,
+            serializer,
+          );
+          sse_encode_String(table, serializer);
+          sse_encode_String(pk, serializer);
+          sse_encode_String(field, serializer);
+          sse_encode_f_64(delta, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 5,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_u_64,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiDirectCairnDirectHandleIncrementConstMeta,
+        argValues: [that, table, pk, field, delta],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDirectCairnDirectHandleIncrementConstMeta =>
+      const TaskConstMeta(
+        debugName: "CairnDirectHandle_increment",
+        argNames: ["that", "table", "pk", "field", "delta"],
+      );
+
+  @override
+  Future<String> crateApiDirectCairnDirectHandleQuery({
+    required CairnDirectHandle that,
+    required String sql,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+            that,
+            serializer,
+          );
+          sse_encode_String(sql, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 6,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiDirectCairnDirectHandleQueryConstMeta,
+        argValues: [that, sql],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDirectCairnDirectHandleQueryConstMeta =>
+      const TaskConstMeta(
+        debugName: "CairnDirectHandle_query",
+        argNames: ["that", "sql"],
+      );
+
+  @override
+  Stream<CairnConnectionState> crateApiDirectCairnDirectHandleResume({
+    required CairnDirectHandle that,
+  }) {
+    final stateSink = RustStreamSink<CairnConnectionState>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+              that,
+              serializer,
+            );
+            sse_encode_StreamSink_cairn_connection_state_Sse(
+              stateSink,
+              serializer,
+            );
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 7,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: sse_decode_String,
+          ),
+          constMeta: kCrateApiDirectCairnDirectHandleResumeConstMeta,
+          argValues: [that, stateSink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return stateSink.stream;
+  }
+
+  TaskConstMeta get kCrateApiDirectCairnDirectHandleResumeConstMeta =>
+      const TaskConstMeta(
+        debugName: "CairnDirectHandle_resume",
+        argNames: ["that", "stateSink"],
+      );
+
+  @override
+  Future<void> crateApiDirectCairnDirectHandleSetToken({
+    required CairnDirectHandle that,
+    String? token,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+            that,
+            serializer,
+          );
+          sse_encode_opt_String(token, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 8,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiDirectCairnDirectHandleSetTokenConstMeta,
+        argValues: [that, token],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDirectCairnDirectHandleSetTokenConstMeta =>
+      const TaskConstMeta(
+        debugName: "CairnDirectHandle_set_token",
+        argNames: ["that", "token"],
+      );
+
+  @override
+  Future<void> crateApiDirectCairnDirectHandleSignOut({
+    required CairnDirectHandle that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+            that,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 9,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiDirectCairnDirectHandleSignOutConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDirectCairnDirectHandleSignOutConstMeta =>
+      const TaskConstMeta(
+        debugName: "CairnDirectHandle_sign_out",
+        argNames: ["that"],
+      );
+
+  @override
+  Stream<CairnConnectionState> crateApiDirectCairnDirectHandleStart({
+    required CairnDirectHandle that,
+    required String scope,
+  }) {
+    final stateSink = RustStreamSink<CairnConnectionState>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+              that,
+              serializer,
+            );
+            sse_encode_String(scope, serializer);
+            sse_encode_StreamSink_cairn_connection_state_Sse(
+              stateSink,
+              serializer,
+            );
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 10,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: sse_decode_String,
+          ),
+          constMeta: kCrateApiDirectCairnDirectHandleStartConstMeta,
+          argValues: [that, scope, stateSink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return stateSink.stream;
+  }
+
+  TaskConstMeta get kCrateApiDirectCairnDirectHandleStartConstMeta =>
+      const TaskConstMeta(
+        debugName: "CairnDirectHandle_start",
+        argNames: ["that", "scope", "stateSink"],
+      );
+
+  @override
+  Future<BigInt> crateApiDirectCairnDirectHandleSyncNow({
+    required CairnDirectHandle that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+            that,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 11,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_u_64,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiDirectCairnDirectHandleSyncNowConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDirectCairnDirectHandleSyncNowConstMeta =>
+      const TaskConstMeta(
+        debugName: "CairnDirectHandle_sync_now",
+        argNames: ["that"],
+      );
+
+  @override
+  Stream<String> crateApiDirectCairnDirectHandleWatch({
+    required CairnDirectHandle that,
+    required String table,
+  }) {
+    final rowsSink = RustStreamSink<String>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+              that,
+              serializer,
+            );
+            sse_encode_String(table, serializer);
+            sse_encode_StreamSink_String_Sse(rowsSink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 12,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: sse_decode_String,
+          ),
+          constMeta: kCrateApiDirectCairnDirectHandleWatchConstMeta,
+          argValues: [that, table, rowsSink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return rowsSink.stream;
+  }
+
+  TaskConstMeta get kCrateApiDirectCairnDirectHandleWatchConstMeta =>
+      const TaskConstMeta(
+        debugName: "CairnDirectHandle_watch",
+        argNames: ["that", "table", "rowsSink"],
+      );
+
+  @override
+  Stream<WriteQueueStatusFfi> crateApiDirectCairnDirectHandleWatchWriteStatus({
+    required CairnDirectHandle that,
+  }) {
+    final statusSink = RustStreamSink<WriteQueueStatusFfi>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+              that,
+              serializer,
+            );
+            sse_encode_StreamSink_write_queue_status_ffi_Sse(
+              statusSink,
+              serializer,
+            );
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 13,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: sse_decode_String,
+          ),
+          constMeta: kCrateApiDirectCairnDirectHandleWatchWriteStatusConstMeta,
+          argValues: [that, statusSink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return statusSink.stream;
+  }
+
+  TaskConstMeta get kCrateApiDirectCairnDirectHandleWatchWriteStatusConstMeta =>
+      const TaskConstMeta(
+        debugName: "CairnDirectHandle_watch_write_status",
+        argNames: ["that", "statusSink"],
+      );
+
+  @override
+  Future<BigInt> crateApiDirectCairnDirectHandleWrite({
+    required CairnDirectHandle that,
+    required String table,
+    required String op,
+    required String pk,
+    String? payloadJson,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+            that,
+            serializer,
+          );
+          sse_encode_String(table, serializer);
+          sse_encode_String(op, serializer);
+          sse_encode_String(pk, serializer);
+          sse_encode_opt_String(payloadJson, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 14,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_u_64,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiDirectCairnDirectHandleWriteConstMeta,
+        argValues: [that, table, op, pk, payloadJson],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDirectCairnDirectHandleWriteConstMeta =>
+      const TaskConstMeta(
+        debugName: "CairnDirectHandle_write",
+        argNames: ["that", "table", "op", "pk", "payloadJson"],
+      );
+
+  @override
+  Future<Uint64List> crateApiDirectCairnDirectHandleWriteBatch({
+    required CairnDirectHandle that,
+    required List<CairnWriteInput> ops,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+            that,
+            serializer,
+          );
+          sse_encode_list_cairn_write_input(ops, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 15,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_u_64_strict,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiDirectCairnDirectHandleWriteBatchConstMeta,
+        argValues: [that, ops],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDirectCairnDirectHandleWriteBatchConstMeta =>
+      const TaskConstMeta(
+        debugName: "CairnDirectHandle_write_batch",
+        argNames: ["that", "ops"],
+      );
+
+  @override
   void crateApiCairnCairnHandleApplySchema({
     required CairnHandle that,
     required List<ClientTableFfi> tables,
@@ -213,7 +891,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             serializer,
           );
           sse_encode_list_client_table_ffi(tables, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -245,7 +923,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 2,
+            funcId: 17,
             port: port_,
           );
         },
@@ -276,7 +954,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(url, serializer);
           sse_encode_opt_String(token, serializer);
           sse_encode_String(dbPath, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 18)!;
         },
         codec: SseCodec(
           decodeSuccessData:
@@ -317,7 +995,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 4,
+            funcId: 19,
             port: port_,
           );
         },
@@ -359,7 +1037,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 20,
             port: port_,
           );
         },
@@ -393,7 +1071,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 21,
             port: port_,
           );
         },
@@ -435,7 +1113,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 22,
             port: port_,
           );
         },
@@ -477,7 +1155,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 23,
             port: port_,
           );
         },
@@ -515,7 +1193,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 24,
             port: port_,
           );
         },
@@ -557,7 +1235,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 10,
+              funcId: 25,
               port: port_,
             );
           },
@@ -597,7 +1275,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 26,
             port: port_,
           );
         },
@@ -631,7 +1309,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 27,
             port: port_,
           );
         },
@@ -679,7 +1357,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 13,
+              funcId: 28,
               port: port_,
             );
           },
@@ -727,7 +1405,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 29,
             port: port_,
           );
         },
@@ -765,7 +1443,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 30,
             port: port_,
           );
         },
@@ -806,7 +1484,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 16,
+              funcId: 31,
               port: port_,
             );
           },
@@ -850,7 +1528,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 17,
+              funcId: 32,
               port: port_,
             );
           },
@@ -896,7 +1574,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 33,
             port: port_,
           );
         },
@@ -934,7 +1612,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 19,
+            funcId: 34,
             port: port_,
           );
         },
@@ -964,7 +1642,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 20,
+            funcId: 35,
             port: port_,
           );
         },
@@ -983,6 +1661,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "init_app", argNames: []);
 
   RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_CairnDirectHandle => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_CairnDirectHandle => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle;
+
+  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_CairnHandle => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnHandle;
 
@@ -997,6 +1683,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CairnDirectHandle
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return CairnDirectHandleImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   CairnHandle
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnHandle(
     dynamic raw,
@@ -1006,12 +1701,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CairnDirectHandle
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return CairnDirectHandleImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   CairnHandle
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnHandle(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return CairnHandleImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  CairnDirectHandle
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return CairnDirectHandleImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -1080,6 +1793,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       primaryKey: dco_decode_list_String(arr[1]),
       columns: dco_decode_list_String(arr[2]),
     );
+  }
+
+  @protected
+  double dco_decode_f_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as double;
   }
 
   @protected
@@ -1193,6 +1912,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CairnDirectHandle
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return CairnDirectHandleImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   CairnHandle
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnHandle(
     SseDeserializer deserializer,
@@ -1205,12 +1936,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CairnDirectHandle
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return CairnDirectHandleImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   CairnHandle
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnHandle(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return CairnHandleImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  CairnDirectHandle
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return CairnDirectHandleImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -1296,6 +2051,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       primaryKey: var_primaryKey,
       columns: var_columns,
     );
+  }
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getFloat64();
   }
 
   @protected
@@ -1452,6 +2213,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+    CairnDirectHandle self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as CairnDirectHandleImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnHandle(
     CairnHandle self,
     SseSerializer serializer,
@@ -1465,6 +2239,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+    CairnDirectHandle self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as CairnDirectHandleImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnHandle(
     CairnHandle self,
     SseSerializer serializer,
@@ -1472,6 +2259,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as CairnHandleImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCairnDirectHandle(
+    CairnDirectHandle self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as CairnDirectHandleImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -1576,6 +2376,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.name, serializer);
     sse_encode_list_String(self.primaryKey, serializer);
     sse_encode_list_String(self.columns, serializer);
+  }
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putFloat64(self);
   }
 
   @protected
@@ -1711,6 +2517,185 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self ? 1 : 0);
   }
+}
+
+@sealed
+class CairnDirectHandleImpl extends RustOpaque implements CairnDirectHandle {
+  // Not to be used by end users
+  CairnDirectHandleImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  CairnDirectHandleImpl.frbInternalSseDecode(
+    BigInt ptr,
+    int externalSizeOnNative,
+  ) : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_CairnDirectHandle,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_CairnDirectHandle,
+    rustArcDecrementStrongCountPtr: RustLib
+        .instance
+        .api
+        .rust_arc_decrement_strong_count_CairnDirectHandlePtr,
+  );
+
+  /// Materialize the read-views for `tables` in the device's SQLite file, as
+  /// [`crate::api::cairn::CairnHandle::apply_schema`] does. Idempotent.
+  ///
+  /// # Errors
+  /// Any view DDL that fails.
+  void applySchema({required List<ClientTableFfi> tables}) => RustLib
+      .instance
+      .api
+      .crateApiDirectCairnDirectHandleApplySchema(that: this, tables: tables);
+
+  /// Stop the loop and every pump. The database and its outbox stay on disk,
+  /// so a later `connect` resumes from the same horizon.
+  Future<void> close() =>
+      RustLib.instance.api.crateApiDirectCairnDirectHandleClose(that: this);
+
+  /// Stop syncing without losing the device: the loop is aborted, `watch`
+  /// streams and writes keep working offline. Pair with [`Self::resume`].
+  /// Idempotent.
+  Future<void> disconnect() => RustLib.instance.api
+      .crateApiDirectCairnDirectHandleDisconnect(that: this);
+
+  /// Add `delta` to `field` through the generated `cairn_increment` — the one
+  /// write Postgres serializes for us, so two devices incrementing the same
+  /// row sum instead of clobbering (ADR-0030, direct-mode plan step 5).
+  ///
+  /// # Errors
+  /// As [`Self::write`].
+  Future<BigInt> increment({
+    required String table,
+    required String pk,
+    required String field,
+    required double delta,
+  }) => RustLib.instance.api.crateApiDirectCairnDirectHandleIncrement(
+    that: this,
+    table: table,
+    pk: pk,
+    field: field,
+    delta: delta,
+  );
+
+  /// Run read-only SQL against the device's own database, returning a JSON
+  /// array of row objects.
+  ///
+  /// # Errors
+  /// The SQL failed to prepare, or a row failed to decode.
+  Future<String> query({required String sql}) => RustLib.instance.api
+      .crateApiDirectCairnDirectHandleQuery(that: this, sql: sql);
+
+  /// Resume syncing after [`Self::disconnect`], on the scope [`Self::start`]
+  /// was given. The outbox flushes on the first sync.
+  ///
+  /// # Errors
+  /// [`Self::start`] was never called, or a loop is already running.
+  Stream<CairnConnectionState> resume() =>
+      RustLib.instance.api.crateApiDirectCairnDirectHandleResume(that: this);
+
+  /// Present `token` as the signed-in user. Direct mode has no session to
+  /// renegotiate, so this takes effect on the next pull — call it whenever
+  /// Supabase refreshes the JWT, and nothing the UI is holding tears down.
+  Future<void> setToken({String? token}) => RustLib.instance.api
+      .crateApiDirectCairnDirectHandleSetToken(that: this, token: token);
+
+  /// Sign out (ADR-0029): stop syncing, drop the token, and wipe local rows,
+  /// the outbox and the horizon — everything the next principal must not see.
+  ///
+  /// The pumps stop FIRST so no watch re-reads the database halfway through
+  /// the delete.
+  ///
+  /// # Errors
+  /// The wipe failed. The token is dropped either way, so a failed sign-out
+  /// cannot leave the device still pulling as the old user.
+  Future<void> signOut() =>
+      RustLib.instance.api.crateApiDirectCairnDirectHandleSignOut(that: this);
+
+  /// Start syncing: pull now, then on every doorbell ring and every
+  /// reconnect, until [`Self::disconnect`] or [`Self::close`].
+  ///
+  /// `scope` is the value the change-log trigger stamps — `sub:<user-uuid>`
+  /// for a user-scoped app, which is also the private Realtime channel the
+  /// device is allowed to join.
+  ///
+  /// The state stream reports what the loop is doing: `connected` after a
+  /// sync that reached the project, `reconnecting` after one that did not.
+  /// There is no socket to be "connecting" on before the first pull, so the
+  /// first value comes from the first sync rather than ahead of it.
+  ///
+  /// # Errors
+  /// A loop is already running.
+  Stream<CairnConnectionState> start({required String scope}) => RustLib
+      .instance
+      .api
+      .crateApiDirectCairnDirectHandleStart(that: this, scope: scope);
+
+  /// Push the outbox and pull once, now. What [`Self::start`]'s loop does on
+  /// a ring — for a pull-to-refresh, or a test.
+  ///
+  /// # Errors
+  /// Whatever the round trip failed with.
+  Future<BigInt> syncNow() =>
+      RustLib.instance.api.crateApiDirectCairnDirectHandleSyncNow(that: this);
+
+  /// Stream `table`'s rows as a JSON array string, re-emitted on every change
+  /// — local write or applied sync.
+  ///
+  /// Emits immediately from durable storage, before any network: rows from a
+  /// previous run must render offline, not only after the first pull.
+  ///
+  /// # Errors
+  /// Never, currently — the signature matches server mode's `watch` so the
+  /// two Dart engines stay interchangeable.
+  Stream<String> watch({required String table}) => RustLib.instance.api
+      .crateApiDirectCairnDirectHandleWatch(that: this, table: table);
+
+  /// Stream durable-outbox status: queued writes, permanently-failed writes,
+  /// and the message the server gave for the last permanent failure.
+  ///
+  /// Emits the current value immediately, because writes queued in a previous
+  /// run are already pending at construction — a status widget built later in
+  /// the app's life must render the true count rather than wait for a change
+  /// that may never come offline.
+  ///
+  /// # Errors
+  /// Never, currently — matches server mode's signature.
+  Stream<WriteQueueStatusFfi> watchWriteStatus() => RustLib.instance.api
+      .crateApiDirectCairnDirectHandleWatchWriteStatus(that: this);
+
+  /// Queue one write. Returns once it is durable on the device; the push to
+  /// PostgREST runs behind it, so a write made offline is kept, not lost.
+  ///
+  /// # Errors
+  /// An unknown `op`, or an outbox that would not commit.
+  Future<BigInt> write({
+    required String table,
+    required String op,
+    required String pk,
+    String? payloadJson,
+  }) => RustLib.instance.api.crateApiDirectCairnDirectHandleWrite(
+    that: this,
+    table: table,
+    op: op,
+    pk: pk,
+    payloadJson: payloadJson,
+  );
+
+  /// Queue a batch atomically — all of it lands in one SQLite transaction or
+  /// none of it does (ADR-0032 T3). Ids come back in the order given.
+  ///
+  /// # Errors
+  /// As [`Self::write`]; one bad op rejects the whole batch before the outbox
+  /// is touched.
+  Future<Uint64List> writeBatch({required List<CairnWriteInput> ops}) => RustLib
+      .instance
+      .api
+      .crateApiDirectCairnDirectHandleWriteBatch(that: this, ops: ops);
 }
 
 @sealed
@@ -1856,8 +2841,8 @@ class CairnHandleImpl extends RustOpaque implements CairnHandle {
   /// [`SqliteStorage`] the client binds at `subscribe()` time, and
   /// `with_storage` reaches the concrete backend the same way `rows_for`
   /// does in `emit_snapshot` below (the closure param is `&SqliteStorage`,
-  /// not `&Storage`, so `.query()` is callable in that position). Parity
-  /// feature P1 — see `docs/plans/powersync-sdk-parity-plan.md`.
+  /// not `&Storage`, so `.query()` is callable in that position). P1 read
+  /// feature.
   ///
   /// This is a read-side accessor on the same `Mutex<Connection>` as the
   /// write path; it shares no mutation surface with the outbox (see the
@@ -1992,7 +2977,7 @@ class CairnHandleImpl extends RustOpaque implements CairnHandle {
 
   /// Drop a stream by the id [`Self::subscribe_stream`] returned. Unknown
   /// id = no-op (idempotent). v1 leaves local rows in place — eviction is
-  /// separate; PowerSync behaves the same.
+  /// separate.
   ///
   /// # Errors
   /// Returns an error string if `subscribe()` hasn't been called.
@@ -2042,7 +3027,7 @@ class CairnHandleImpl extends RustOpaque implements CairnHandle {
   ///
   /// `op` is `"upsert"` (insert-or-update), `"delete"`, or `"patch"`
   /// (column-level UPDATE of an existing row — `payload` carries only the
-  /// columns to change; P3 PowerSync PATCH parity).
+  /// columns to change; P3 column-level PATCH).
   ///
   /// # Errors
   /// Returns an error string if `subscribe()` hasn't been called yet, `op`

@@ -188,7 +188,7 @@ flutter:
     - assets/cairn.json
 ```
 
-### Declare your schema (PowerSync-style)
+### Declare your schema
 
 A declared `CairnSchema` **is** the migration story: every connect re-applies
 it (read-views are dropped + recreated server-side, `SqliteStorage::apply_schema`).
