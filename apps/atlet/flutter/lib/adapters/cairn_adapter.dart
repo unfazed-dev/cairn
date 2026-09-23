@@ -30,16 +30,12 @@ class CairnAdapter implements SyncAdapter {
             required String accessToken,
             required String userId,
             required String dbDir,
-          }) => CairnDatabase.direct(
+          }) => openCairnDirect(
             supabaseUrl: supabaseUrl,
             anonKey: anonKey,
-            // The scope the change-log trigger stamps, and the private Realtime
-            // channel this device may join — see .cairn/direct.sql's
-            // `cairn.current_scopes()`.
-            scope: 'sub:$userId',
-            token: accessToken,
-            schema: _schema,
-            sqlitePath: '$dbDir/cairn_direct.sqlite',
+            accessToken: accessToken,
+            userId: userId,
+            dbDir: dbDir,
           ));
 
   @override
@@ -406,15 +402,21 @@ class CairnAdapter implements SyncAdapter {
       _db ?? (throw StateError('CairnAdapter.init() must be called first'));
 
   /// PILOT (ADR-0037): register this device's push token against the live
-  /// engine's REST surface (`POST /push-tokens`, same JWT as `/sync`).
-  /// Passthrough so callers never hold the SDK directly; the SDK's sign-out
-  /// hook deregisters session-registered tokens automatically.
+  /// engine — `POST /push-tokens` in server mode, the
+  /// `cairn_register_push_token` RPC in direct mode (ADR-0045), same JWT as
+  /// the sync either way. Passthrough so callers never hold the SDK directly;
+  /// the SDK's sign-out hook deregisters session-registered tokens
+  /// automatically.
   Future<void> registerPushToken(String platform, String token) =>
       _requireDb().registerPushToken(platform, token);
 
   /// PILOT (ADR-0037): the access token the live session was opened with —
   /// what the push pilot persists for its background-isolate wake.
   String? get currentAccessToken => _accessToken;
+
+  /// The signed-in user — the background wake rebuilds the direct-mode scope
+  /// (`sub:<id>`) from it.
+  String? get currentUserId => _userId;
 
   /// Swap the credential the live engine syncs with, without tearing it down.
   ///
@@ -448,6 +450,27 @@ StreamSubscription<CairnConnectionState> wireConnectionState(
 ) => connectionState.listen((state) {
   onConnected(state == CairnConnectionState.connected);
 });
+
+/// Opens Atlet's direct-mode database (ADR-0045). Shared by
+/// [CairnAdapter.direct] and the push pilot's background wake, which must
+/// land on the SAME SQLite file with the same scope.
+Future<CairnDatabase> openCairnDirect({
+  required String supabaseUrl,
+  required String anonKey,
+  required String accessToken,
+  required String userId,
+  required String dbDir,
+}) => CairnDatabase.direct(
+  supabaseUrl: supabaseUrl,
+  anonKey: anonKey,
+  // The scope the change-log trigger stamps, and the private Realtime
+  // channel this device may join — see .cairn/direct.sql's
+  // `cairn.current_scopes()`.
+  scope: 'sub:$userId',
+  token: accessToken,
+  schema: _schema,
+  sqlitePath: '$dbDir/cairn_direct.sqlite',
+);
 
 final CairnSchema _schema = CairnSchema(
   tables: [
