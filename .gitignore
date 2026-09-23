@@ -69,7 +69,7 @@ sdk/cairn_react_native/ios/libcairn_swift.a
 # .mcp.json pins this checkout to one operator's Supabase project; supabase/.temp/
 # is CLI scratch. Neither belongs in the shared OSS repo.
 .mcp.json
-supabase/.temp/
+**/supabase/.temp/
 
 # Firebase/Google credentials dropped for local testing
 apps/atlet/FCM/
@@ -79,4 +79,5 @@ apps/atlet/flutter/ios/Runner/GoogleService-Info.plist
 # Python bytecode from packaging/release tooling
 __pycache__/
 *.pyc
-.cairn/local/
+# cairn link output: config.json carries the project anon key
+.cairn/
