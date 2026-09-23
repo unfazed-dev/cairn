@@ -1,7 +1,7 @@
 # Cairn Security Model
 
 How cairn authorizes reads + writes against the source Postgres, and the
-trade-off vs Supabase RLS / PowerSync's split-write model. **Read this before
+trade-off vs Supabase RLS / a split-write model. **Read this before
 adopting cairn on a Supabase project whose security model is RLS.**
 
 ## The collapsed-write model
@@ -91,18 +91,18 @@ app where a trusted server is the writer and complex per-user row policies aren'
 the security model.
 
 **cairn does NOT fit** apps whose security model *is* complex per-user RLS —
-there, cairn's single-column tenant model is a step down. Use PowerSync (writes
+there, cairn's single-column tenant model is a step down. Use a split-write setup (writes
 go through Supabase's Data API, where your RLS applies) or PostgREST directly.
 This is a deliberate architectural consequence of zero-backend-write, not a bug.
 
 ## Comparison
 
-| | cairn (collapsed) | PowerSync (split) |
+| | cairn (collapsed) | split write (app → Data API) |
 |---|---|---|
 | Who applies the write | cairn-server `PgWriteBack` → direct pg | the app's `uploadData` → Supabase Data API |
 | Write authorization | cairn: JWT + `CAIRN_WRITE_TABLES` + tenant-scope | Supabase RLS (per-user JWT) |
 | App write code | **none** (zero-backend-write) | developer writes `uploadData` |
-| Connects to pg as | least-privilege `BYPASSRLS` role | n/a — the app uses the Data API; PowerSync only reads the WAL |
+| Connects to pg as | least-privilege `BYPASSRLS` role | n/a — the app writes via the Data API |
 
 ## Related
 

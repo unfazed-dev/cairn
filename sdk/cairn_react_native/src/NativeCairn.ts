@@ -13,8 +13,8 @@
 // OPEN as of RN 0.84; the RN 0.84 release notes have zero WASM mentions).
 // Cairn's `@cairn/web` WASM core (`cairn-ffi-wasm`) is therefore a dead end
 // inside RN. This TurboModule bridges to the already-shipped `cairn-swift` /
-// `cairn-kotlin` UniFFI bindings instead — the SAME shape PowerSync's RN SDK
-// validated (pure-TS facade over a native JSI backend).
+// `cairn-kotlin` UniFFI bindings instead — a validated shape: a pure-TS
+// facade over a native JSI backend.
 //
 // METHOD-BY-METHOD MAPPING (spec → UniFFI in sdk/cairn_swift + sdk/cairn_kotlin)
 //   connect(url, token, dbPath) → CairnClient::new(url, token, db_path) + CairnClient::connect() -> Result<(), CairnError>

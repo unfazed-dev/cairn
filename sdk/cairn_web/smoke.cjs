@@ -1,5 +1,5 @@
 // Node smoke for @cairn/web — proves the package `require()`s in node 22
-// and drives the wasm apply engine through the PowerSync-style facade.
+// and drives the wasm apply engine through the facade.
 //
 // REDUCED-SCOPE: does NOT exercise CairnSocket.connect() (the live WS
 // transport) — see index.js header. Apply engine only.

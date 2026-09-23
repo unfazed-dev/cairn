@@ -1,7 +1,7 @@
 // @cairn/react-native — TS facade over the NativeCairn TurboModule.
 //
-// Mirrors `@cairn/web`'s PowerSync-shaped API (connect / subscribe / write /
-// query / checkpoint), Promise-returning. TWO row-access paths:
+// Mirrors `@cairn/web`'s connect/subscribe/write API (connect / subscribe /
+// write / query / checkpoint), Promise-returning. TWO row-access paths:
 //   • POLL — `subscribe(table)` starts the live replication loop on the native
 //     side (the UniFFI `run_with_reconnect` loop inside cairn-swift/kotlin);
 //     the app polls `pollRows(table)` / `query(sql)` to drain applied rows.
@@ -144,7 +144,7 @@ interface WatchHandle {
 }
 
 /**
- * PowerSync-style sync client for React Native. Wraps the NativeCairn
+ * Sync client for React Native. Wraps the NativeCairn
  * TurboModule (which, in Wave B, wraps cairn-swift / cairn-kotlin's UniFFI
  * `CairnClient`, which wraps `cairn_client::SyncClient<SqliteStorage>`).
  *

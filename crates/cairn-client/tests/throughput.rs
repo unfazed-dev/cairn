@@ -24,7 +24,7 @@ use cairn_client::SqliteStorage;
 use cairn_core::Storage;
 use cairn_domain::{Lsn, RowOp};
 
-/// Build `n` unique insert ops with ~100B payloads (the PowerSync "small row"
+/// Build `n` unique insert ops with ~100B payloads (the "small row"
 /// regime — apples-to-apples with the server-side benchmark profile).
 fn make_ops(n: usize) -> Vec<RowOp> {
     (0..n)

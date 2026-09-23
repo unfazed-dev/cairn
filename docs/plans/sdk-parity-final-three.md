@@ -1,7 +1,7 @@
 # SDK Parity — Final Three (RN, Capacitor, .NET) → 10/10
 
 **Started:** 2026-07-12. **Owner:** Claude (tech lead). **Bar (operator-approved
-"complete all the rest"):** bring Cairn to PowerSync-parity breadth (10/10 platforms).
+"complete all the rest"):** bring Cairn to parity breadth with the leading reference SDK (10/10 platforms).
 Each new SDK ships a public API (`connect`/`subscribe`/`query`/`write`) mirroring the
 existing 7, **compile-verified + offline smoke**, with **live-E2E vs the shared axum spine
 where the device runtime is present, honest SKIP-with-reason where it isn't**. `make sdk-e2e`
@@ -16,7 +16,7 @@ decides it.
 Capacitor **v8** is current (2026; `8.4.1` latest, `8.0.0` released 2025-12-08). The
 webview is a full browser engine — **WASM + WebSocket run unmodified in WKWebView (iOS)
 and Android WebView (Chromium)** (caniuse: Safari iOS ✅ 11–26.5, Chrome Android ✅;
-PowerSync's own Capacitor SDK is built on top of its Web SDK + `@capacitor-community/sqlite`).
+a comparable sync SDK's own Capacitor plugin is built on top of its Web SDK + `@capacitor-community/sqlite`).
 
 `sdk/cairn_capacitor` = a `registerPlugin` **web-only** plugin re-exporting `@cairn/web`'s
 **browser live path** (`CairnSocket` via the `--target web` `pkg-web` build) — **no native
@@ -35,7 +35,7 @@ Binding = **UniFFI-CS (Nord fork `NordSecurity/uniffi-bindgen-cs`)**, pinned
 `v0.9.2+v0.28.3` (tracks UniFFI 0.28 — the exact version `cairn_swift`/`cairn_kotlin`
 already use). This **reuses the existing `#[derive(uniffi::Object)]` / `#[uniffi::export]`
 surface verbatim** — one Rust interface, four foreign bindings. `cbindgen`+P/Invoke is the
-more mature tool but loses the reuse (parallel hand-marshalled C ABI). PowerSync's .NET SDK
+more mature tool but loses the reuse (parallel hand-marshalled C ABI). A comparable sync SDK's .NET SDK
 is **pure C# (zero Rust, no DllImport)** → it is *no precedent* for Rust→.NET; Cairn's
 thin-FFI-per-SDK bet (ADR-0015) makes UniFFI the consistent answer.
 
@@ -68,7 +68,7 @@ WASM core is a dead end for RN.**
 
 `sdk/cairn_react_native` = a **TS facade (mirroring `@cairn/web`)** backed by a **Codegen
 Turbo Native Module** that calls the **already-shipped** `cairn_swift` (iOS, UniFFI
-staticlib) and `cairn_kotlin` (Android, UniFFI `.so` in an `.aar`) bindings. PowerSync
+staticlib) and `cairn_kotlin` (Android, UniFFI `.so` in an `.aar`) bindings. A comparable sync SDK
 validates this exact shape (pure-TS sync facade + native JSI SQLite backend via
 op-sqlite / react-native-quick-sqlite).
 
