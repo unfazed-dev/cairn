@@ -34,6 +34,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 COPY --from=builder /usr/local/bin/cairn-server /usr/local/bin/cairn-server
 COPY --from=builder /usr/local/bin/cairn-cloud  /usr/local/bin/cairn-cloud
 COPY --from=builder /usr/local/bin/cairn-pushd  /usr/local/bin/cairn-pushd
+# ADR-0046: pre-rename binary names as symlinks (a no-op until the rename).
+RUN --mount=type=bind,source=packaging/legacy-binary-names.sh,target=/tmp/legacy-binary-names.sh \
+    sh /tmp/legacy-binary-names.sh /usr/local/bin
 # Default to the sync server; override CMD for the cloud/push binaries.
 ENV CAIRN_LOG=info,cairn=info RUST_LOG=info
 EXPOSE 8800 9090 8090
