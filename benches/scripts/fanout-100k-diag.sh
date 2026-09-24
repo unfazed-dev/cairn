@@ -145,7 +145,7 @@ in_container() { # args: inner-script args...
     -v cairn-linux-target-fanout:/target \
     -v cairn-linux-cargo-registry-fanout:/usr/local/cargo/registry \
     -e CARGO_TARGET_DIR=/target \
-    -e RUSTUP_TOOLCHAIN=1.98.0 \
+    -e RUSTUP_TOOLCHAIN=1.98.1 \
     -e CARGO_INCREMENTAL=0 \
     -e TAG=fanout-diag \
     -e CAIRN_PROBE_SKIP_DECODE="${CAIRN_PROBE_SKIP_DECODE:-}" \

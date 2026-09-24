@@ -12,7 +12,7 @@
 #   docker run --rm cairn cairn-pushd
 
 # ---------- builder ----------
-FROM rust:1.95-bookworm AS builder
+FROM rust:1.98-bookworm AS builder
 WORKDIR /cairn
 # Install needed system libs (none beyond what the base image provides for our
 # deps; rusqlite uses `bundled` sqlite, reqwest uses rustls — no system deps).
