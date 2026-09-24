@@ -106,12 +106,12 @@ One app for the whole cloud (separate from the per-project sync apps):
 fly launch --no-deploy --name cairn-cloud --dockerfile Dockerfile
 fly secrets set --app cairn-cloud \
   STRIPE_SECRET_KEY=... STRIPE_WEBHOOK_SECRET=... CAIRN_CLOUD_ADMIN_KEY=...
-# Override the entrypoint to the cloud binary (the image defaults to cairn-server):
+# The image's default command is cairn-server; the cloud app overrides it:
 fly deploy --app cairn-cloud --strategy rolling
 ```
 
 (The cloud app sets `[processes]`/CMD to `cairn-cloud`; the per-project sync
-apps use the default `cairn-server` entrypoint.)
+apps use the default `cairn-server` command.)
 
 ---
 

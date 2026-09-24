@@ -7,7 +7,7 @@
 # registry, selected at runtime by CAIRN_PUSHD_DATABASE_URL).
 #
 #   docker build -t cairn .
-#   docker run --rm cairn cairn-server   # default entrypoint arg
+#   docker run --rm cairn cairn-server   # default command
 #   docker run --rm cairn cairn-cloud
 #   docker run --rm cairn cairn-pushd
 
@@ -37,4 +37,4 @@ COPY --from=builder /usr/local/bin/cairn-pushd  /usr/local/bin/cairn-pushd
 # Default to the sync server; override CMD for the cloud/push binaries.
 ENV CAIRN_LOG=info,cairn=info RUST_LOG=info
 EXPOSE 8800 9090 8090
-ENTRYPOINT ["cairn-server"]
+CMD ["cairn-server"]

@@ -5,7 +5,7 @@
 # one isolated cairn-server Fly app bound to that project's Postgres source.
 #
 # Build: uses the repo-root Dockerfile (builds cairn-server --features pg +
-# cairn-cloud; the entrypoint is cairn-server). Override the app name + region
+# cairn-cloud; the default command is cairn-server). Override the app name + region
 # per project:
 #   fly deploy --app cairn-sync-<project-id> --image-label <project-id>
 #
