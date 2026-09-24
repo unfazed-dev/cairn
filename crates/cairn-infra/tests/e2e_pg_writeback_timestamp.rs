@@ -51,7 +51,7 @@ use cairn_infra::{AllowAnonymous, PgWriteBack};
 const E2E_FLAG: &str = "CAIRN_E2E_PG";
 
 fn pg_url() -> String {
-    std::env::var("CAIRN_PG_URL")
+    cairn_infra::env::var("CAIRN_PG_URL")
         .unwrap_or_else(|_| "postgresql://cairn:cairn@localhost:5433/cairn".into())
 }
 
@@ -163,7 +163,7 @@ async fn shutdown_server(
 /// sends — and assert the write is accepted and the row (incl. created_at) lands.
 #[tokio::test]
 async fn timestamptz_iso8601_string_binds_and_lands() {
-    if std::env::var(E2E_FLAG).is_err() {
+    if cairn_infra::env::var(E2E_FLAG).is_err() {
         eprintln!("skipping (set {E2E_FLAG}=1 with `make pg-up` to run)");
         return;
     }

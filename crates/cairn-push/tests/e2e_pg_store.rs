@@ -35,14 +35,14 @@ use cairn_push::store::{
 const E2E_FLAG: &str = "CAIRN_E2E_PG";
 
 fn pg_url() -> String {
-    std::env::var("CAIRN_PG_URL")
+    cairn_infra::env::var("CAIRN_PG_URL")
         .unwrap_or_else(|_| "postgres://cairn:cairn@localhost:5433/cairn".into())
 }
 
 /// The self-skip gate: without `CAIRN_E2E_PG=1` a test returns early with
 /// a stderr note. A green-but-skipped run is NOT a verified pass.
 fn gated() -> bool {
-    if std::env::var(E2E_FLAG).is_ok() {
+    if cairn_infra::env::var(E2E_FLAG).is_ok() {
         return true;
     }
     eprintln!("skipping (set {E2E_FLAG}=1 with `make pg-up` to run)");

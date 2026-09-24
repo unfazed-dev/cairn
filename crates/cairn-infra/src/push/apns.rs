@@ -122,7 +122,7 @@ impl ApnsRail {
                 ))
             })?
         };
-        let sandbox = std::env::var("CAIRN_APNS_SANDBOX").is_ok_and(|v| v == "1");
+        let sandbox = crate::env::var("CAIRN_APNS_SANDBOX").is_ok_and(|v| v == "1");
         Self::new(&pem, &key_id, &team_id, &bundle_id, sandbox).map(Some)
     }
 
@@ -634,7 +634,7 @@ mod tests {
     /// `CAIRN_E2E_APNS_TOKEN` (64-hex device token).
     #[tokio::test]
     async fn e2e_apns_smoke() {
-        if std::env::var("CAIRN_E2E_APNS").is_err() {
+        if crate::env::var("CAIRN_E2E_APNS").is_err() {
             eprintln!(
                 "skipping (set CAIRN_E2E_APNS=1 with CAIRN_APNS_* and CAIRN_E2E_APNS_TOKEN to run)"
             );
@@ -643,7 +643,7 @@ mod tests {
         let rail = ApnsRail::from_env()
             .expect("config parses")
             .expect("rail configured");
-        let token = std::env::var("CAIRN_E2E_APNS_TOKEN").expect("CAIRN_E2E_APNS_TOKEN");
+        let token = crate::env::var("CAIRN_E2E_APNS_TOKEN").expect("CAIRN_E2E_APNS_TOKEN");
         let outcome = rail
             .send(
                 &token,

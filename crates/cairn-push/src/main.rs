@@ -11,12 +11,11 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::Context;
-use clap::Parser;
 use tracing::{info, warn};
 
 use cairn_push::auth::ApiKeys;
 use cairn_push::coalescer::{self, CoalescerLimits};
-use cairn_push::config::Config;
+use cairn_push::config::{Config, DEFAULT_DB, LEGACY_DB};
 use cairn_push::limit::SendRateLimiter;
 use cairn_push::rail::Rails;
 use cairn_push::store::SqliteStore;
@@ -27,7 +26,12 @@ use cairn_push::{build_router, AppState};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let cfg = Config::parse();
+    let mut cfg = cairn_infra::env::parse::<Config>();
+    // ADR-0046: a default-path deployment keeps its pre-rename registry.
+    if cfg.db == DEFAULT_DB {
+        let db = cairn_infra::config_path::resolve(std::path::Path::new(""), DEFAULT_DB, LEGACY_DB);
+        cfg.db = db.display().to_string();
+    }
     init_tracing();
 
     // Fail fast (pin 0.2): a daemon with no usable key list must never

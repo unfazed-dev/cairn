@@ -56,7 +56,7 @@ cairn-core = { workspace = true, features = ["conformance"] }
 # (its Cargo.toml dev-deps cairn-application): dev-deps do not change the
 # lib's dependency direction — [dependencies] above stays core/domain/infra.
 cairn-application = { workspace = true }
-cairn-infra = { workspace = true }
+cairn-infra = { workspace = true, features = ["clap"] }
 async-trait = { workspace = true }
 axum = { workspace = true }
 bytes = { workspace = true }

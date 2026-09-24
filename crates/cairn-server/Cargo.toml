@@ -26,7 +26,7 @@ iroh = ["cairn-infra/iroh"]
 [dependencies]
 cairn-domain = { workspace = true }
 cairn-application = { workspace = true }
-cairn-infra = { workspace = true }
+cairn-infra = { workspace = true, features = ["clap"] }
 cairn-license = { workspace = true }
 
 tokio = { workspace = true }

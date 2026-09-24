@@ -9,7 +9,7 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use clap::{Args, ValueEnum};
 
-use crate::config::{CairnConfig, DEFAULT_FILE_NAME};
+use crate::config::{config_path, CairnConfig};
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum Template {
@@ -32,7 +32,7 @@ pub fn run(args: DeployArgs, cwd: &Path) -> Result<()> {
         return Ok(());
     };
 
-    let cfg = CairnConfig::load(&cwd.join(DEFAULT_FILE_NAME))?;
+    let cfg = CairnConfig::load(&config_path(cwd))?;
     match template {
         Template::Fly => write_fly(&cfg, cwd),
         Template::Railway => write_railway(&cfg, cwd),

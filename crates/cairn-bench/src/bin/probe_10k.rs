@@ -160,7 +160,7 @@ async fn run(
     }
     eprintln!("  [diag] listeners: {}", urls.join(" "));
     // Prices the client swarm's own decode — see `count_frames_cheap`.
-    let skip_decode = std::env::var("CAIRN_PROBE_SKIP_DECODE").is_ok_and(|v| v == "1");
+    let skip_decode = cairn_infra::env::var("CAIRN_PROBE_SKIP_DECODE").is_ok_and(|v| v == "1");
     if skip_decode {
         eprintln!("  [diag] CLIENT DECODE DISABLED (frame counting only) — harness-cost probe");
     }

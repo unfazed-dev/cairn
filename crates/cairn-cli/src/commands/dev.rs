@@ -6,11 +6,13 @@ use std::process::Stdio;
 use anyhow::{Context, Result};
 use tokio::process::Command;
 
-use crate::config::{CairnConfig, DEFAULT_FILE_NAME};
+use cairn_infra::rules_file;
+
+use crate::config::{config_path, CairnConfig};
 use crate::dotenv;
 
 pub async fn run(cwd: &Path) -> Result<()> {
-    let cfg = CairnConfig::load(&cwd.join(DEFAULT_FILE_NAME))?;
+    let cfg = CairnConfig::load(&config_path(cwd))?;
 
     let env_path = cwd.join(".env");
     let dotenv_vars = dotenv::read(&env_path);
@@ -73,7 +75,7 @@ pub async fn run(cwd: &Path) -> Result<()> {
 fn push_rules_file_env(env_pairs: &mut Vec<(String, String)>, cwd: &Path) {
     env_pairs.push((
         "CAIRN_RULES_FILE".to_string(),
-        cwd.join("cairn_rules.toml").display().to_string(),
+        rules_file::path_in(cwd).display().to_string(),
     ));
 }
 
@@ -193,7 +195,10 @@ mod tests {
             .iter()
             .find(|(k, _)| k == "CAIRN_RULES_FILE")
             .expect("CAIRN_RULES_FILE present");
-        assert_eq!(v, &cwd.join("cairn_rules.toml").display().to_string());
+        assert_eq!(
+            v,
+            &cwd.join(rules_file::RULES_FILE_NAME).display().to_string()
+        );
         assert!(Path::new(v).is_absolute());
     }
 

@@ -43,7 +43,7 @@ use cairn_infra::replicator::{PgReplicator, PgReplicatorConfig};
 const E2E_FLAG: &str = "CAIRN_E2E_PG";
 
 fn pg_url() -> String {
-    std::env::var("CAIRN_PG_URL")
+    cairn_infra::env::var("CAIRN_PG_URL")
         .unwrap_or_else(|_| "postgresql://cairn:cairn@localhost:5433/cairn".into())
 }
 
@@ -92,7 +92,7 @@ async fn collect_events(
 /// Restart with the same slot → NO snapshot replay.
 #[tokio::test]
 async fn fresh_slot_yields_snapshot_rows_then_live_stream() {
-    if std::env::var(E2E_FLAG).is_err() {
+    if cairn_infra::env::var(E2E_FLAG).is_err() {
         eprintln!("skipping (set {E2E_FLAG}=1 with `make pg-up` to run)");
         return;
     }
@@ -243,7 +243,7 @@ async fn fresh_slot_yields_snapshot_rows_then_live_stream() {
 /// this hold structurally; this test proves it.
 #[tokio::test]
 async fn concurrent_writes_during_snapshot_appear_exactly_once() {
-    if std::env::var(E2E_FLAG).is_err() {
+    if cairn_infra::env::var(E2E_FLAG).is_err() {
         eprintln!("skipping (set {E2E_FLAG}=1 with `make pg-up` to run)");
         return;
     }

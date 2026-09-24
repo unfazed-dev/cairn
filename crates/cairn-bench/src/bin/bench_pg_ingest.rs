@@ -246,7 +246,7 @@ struct Measured {
 #[tokio::main]
 async fn main() -> Result<()> {
     init_tracing();
-    let cfg = Config::parse();
+    let cfg = cairn_infra::env::parse::<Config>();
     info!(?cfg, "starting cairn-bench-pg-ingest");
 
     // Modest client counts by default, but keep FD headroom parity with the
